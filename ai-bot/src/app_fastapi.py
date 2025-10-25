@@ -1,5 +1,5 @@
 """
-Campfire AI Bot - FastAPI webhook server (v0.3.2)
+Campfire AI Bot - FastAPI webhook server (v0.3.3)
 Receives Campfire webhooks and responds using Claude Agent SDK with stateful session management
 
 Key Improvements over Flask (v1.0.14):
@@ -25,6 +25,12 @@ v0.3.2 Changes:
 - New tools: get_menu_profitability, get_top_profitable_dishes, get_low_profit_dishes,
   get_cost_coverage_rate, get_dishes_missing_cost
 - Total bots: 8 (Financial, Technical, Personal, Briefing, Default, Operations, CC Tutor, Menu Engineering)
+
+v0.3.3 Changes:
+- Agent Tools Refactoring: Split 2,418-line agent_tools.py into 7 modular decorator files
+- 46% code reduction (2,418 → 1,305 lines total)
+- Improved maintainability and navigation
+- Zero behavior changes (pure structural refactoring)
 """
 
 import os
@@ -134,7 +140,7 @@ async def lifespan(app: FastAPI):
     config = get_config()
 
     print("=" * 60)
-    print("🚀 Campfire AI Bot v0.3.2 - Menu Engineering with Boston Matrix")
+    print("🚀 Campfire AI Bot v0.3.3 - Agent Tools Refactoring")
     print("=" * 60)
 
     # Startup: Initialize application state
@@ -192,7 +198,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Campfire AI Bot",
     description="AI-powered bot for Campfire chat using Claude Agent SDK with API fallback",
-    version="0.3.1.1",
+    version="0.3.3",
     lifespan=lifespan
 )
 
@@ -202,7 +208,7 @@ async def health():
     """Health check endpoint"""
     return {
         'status': 'healthy',
-        'version': '0.3.1.1',
+        'version': '0.3.3',
         'timestamp': datetime.now().isoformat()
     }
 
@@ -532,7 +538,7 @@ if __name__ == "__main__":
     port = int(os.getenv('FASTAPI_PORT', 8000))
     host = os.getenv('FASTAPI_HOST', '0.0.0.0')
 
-    print(f"Starting Campfire AI Bot v0.3.2 on {host}:{port}")
+    print(f"Starting Campfire AI Bot v0.3.3 on {host}:{port}")
     print(f"Database: {config['CAMPFIRE_DB_PATH']}")
     print(f"Campfire URL: {config['CAMPFIRE_URL']}")
 

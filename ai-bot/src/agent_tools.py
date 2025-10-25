@@ -109,9 +109,53 @@ from src.tools.image_decorators import (
     process_image_tool
 )
 
+# Aggregate all tools into AGENT_TOOLS list (for SDK MCP server creation)
+AGENT_TOOLS = [
+    # Campfire tools (7)
+    search_conversations_tool,
+    get_user_context_tool,
+    save_user_preference_tool,
+    search_knowledge_base_tool,
+    read_knowledge_document_tool,
+    list_knowledge_documents_tool,
+    store_knowledge_document_tool,
+    # Briefing tools (2)
+    generate_daily_briefing_tool,
+    search_briefings_tool,
+    # Personal tools (4)
+    manage_personal_tasks_tool,
+    set_reminder_tool,
+    save_personal_note_tool,
+    search_personal_notes_tool,
+    # Operations tools (3)
+    query_operations_data_tool,
+    update_operations_data_tool,
+    get_operations_summary_tool,
+    # Analytics tools (10)
+    get_daily_revenue_tool,
+    get_revenue_by_zone_tool,
+    get_top_dishes_tool,
+    get_station_performance_tool,
+    get_quick_stats_tool,
+    get_hourly_revenue_tool,
+    get_table_turnover_tool,
+    get_return_analysis_tool,
+    get_order_type_distribution_tool,
+    get_revenue_trend_tool,
+    # Menu engineering tools (5)
+    get_menu_profitability_tool,
+    get_top_profitable_dishes_tool,
+    get_low_profit_dishes_tool,
+    get_cost_coverage_rate_tool,
+    get_dishes_missing_cost_tool,
+    # Image tools (1)
+    process_image_tool
+]
+
 # Export all for backward compatibility
 __all__ = [
     'initialize_tools',
+    'AGENT_TOOLS',
     # Campfire tools (7)
     'search_conversations_tool',
     'get_user_context_tool',
