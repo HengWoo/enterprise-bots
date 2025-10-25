@@ -2,17 +2,17 @@
 
 **Project:** AI-Powered Group Chat Intelligence
 **Platform:** Campfire (37signals ONCE)
-**Current Version:** v0.3.2
+**Current Version:** v0.3.3
 **Production Status:** ✅ All 8 bots active with Haiku 4.5
 
 ---
 
 ## 🔥 Current Status
 
-**Production:** v0.3.2 with claude-haiku-4-5-20251001 model
-**Architecture:** FastAPI + Stateful Sessions + Progress Milestones + Knowledge Base + Skills MCP + Supabase
+**Production:** v0.3.3 with claude-haiku-4-5-20251001 model
+**Architecture:** FastAPI + Stateful Sessions + Progress Milestones + Knowledge Base + Skills MCP + Supabase + Modular Tools
 **Bots:** 8 specialized assistants (Financial, Technical, Personal, Briefing, Default, Operations, CC Tutor, Menu Engineering)
-**Key Feature:** Menu Engineering bot with Boston Matrix profitability analysis
+**Key Feature:** Agent Tools Refactoring - 46% code reduction with 7 modular decorator files
 
 ---
 
@@ -459,7 +459,8 @@ base_tools = ["mcp__campfire__*"] # 7 knowledge base and conversation tools
 | v0.2.4 | 3 New Bots + API Fallback | ✅ Deployed |
 | v0.3.0 | Haiku 4.5 + Enhanced HTML | ✅ Deployed |
 | v0.3.0.1 | Operations + CC Tutor bots | ✅ Deployed |
-| **v0.3.2** | **Menu Engineering + Boston Matrix** | **✅ IN PRODUCTION** 🔥 |
+| v0.3.2 | Menu Engineering + Boston Matrix | ✅ Deployed |
+| **v0.3.3** | **Agent Tools Refactoring (46% code reduction)** | **✅ IN PRODUCTION** 🔥 |
 
 ---
 
@@ -482,7 +483,7 @@ base_tools = ["mcp__campfire__*"] # 7 knowledge base and conversation tools
 
 ---
 
-**Document Version:** 6.0 (v0.3.2 - Menu Engineering Bot)
-**Last Updated:** October 23, 2025
-**Production Status:** v0.3.2 deployed ✅
+**Document Version:** 7.0 (v0.3.3 - Agent Tools Refactoring)
+**Last Updated:** October 25, 2025
+**Production Status:** v0.3.3 deployed ✅
 **For Details:** See CLAUDE.md (project memory), IMPLEMENTATION_PLAN.md (deployment)

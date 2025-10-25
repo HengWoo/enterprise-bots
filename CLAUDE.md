@@ -12,14 +12,16 @@
 
 ## 🔥 Current Production Status
 
-**Production Version:** v0.3.2 ✅
-**Last Deployed:** 2025-10-23
+**Production Version:** v0.3.3 ✅
+**Last Deployed:** 2025-10-25
 **Status:** All systems operational
 
-**Latest Changes (v0.3.2):**
-- ✅ Menu Engineering bot with Boston Matrix profitability analysis
-- ✅ 5 new Supabase RPC functions for dish analysis
-- ✅ Total bots: 8 (was 5 in v0.3.0)
+**Latest Changes (v0.3.3):**
+- ✅ Agent Tools Refactoring: Split 2,418-line monolithic file into 7 modular files
+- ✅ 46% code reduction (2,418 → 1,305 total lines)
+- ✅ Improved maintainability with domain-separated tool modules
+- ✅ Bug fix: Added missing AGENT_TOOLS export for SDK MCP server creation
+- ✅ Total bots: 8 (all operational with modular architecture)
 
 **Working Features:**
 - ✅ FastAPI + Stateful Sessions (hot/warm/cold paths, 40% faster responses)
@@ -43,7 +45,7 @@ AI-powered intelligent bot system for Campfire group chat that transforms team c
 - **Domain:** https://chat.smartice.ai
 - **Platform:** Campfire (37signals ONCE) - auto-updates nightly at 2am
 - **Database:** SQLite at `/var/once/campfire/db/production.sqlite3` (WAL mode)
-- **AI Service:** `/root/ai-service/` (Docker: hengwoo/campfire-ai-bot:0.3.2)
+- **AI Service:** `/root/ai-service/` (Docker: hengwoo/campfire-ai-bot:0.3.3)
 - **Knowledge Base:** `/root/ai-knowledge/company_kb/`
 
 ## Bot Configuration
@@ -259,24 +261,31 @@ docker logs -f campfire-ai-bot
    - **Result:** Restaurant can now identify Stars (promote), Puzzles (market more), Plowhorses (raise prices), Dogs (remove)
    - **Status:** ✅ Deployed to production (v0.3.2)
 
-**Features Still Planned:**
+**New Features Completed (v0.3.3):**
 
-8. **🔧 Agent Tools Refactoring** (Priority: High - v0.3.3)
-   - **Problem:** `agent_tools.py` has grown to 2,418 lines (unwieldy)
-   - **Solution:** Split into modular decorator files by domain
-   - **Structure:**
+8. **🔧 Agent Tools Refactoring** ✅ (Completed in v0.3.3)
+   - **Problem:** `agent_tools.py` had grown to 2,418 lines (difficult to maintain and navigate)
+   - **Solution:** Split into 7 modular decorator files by functional domain
+   - **Structure created:**
      ```
      src/tools/
-     ├── campfire_decorators.py       # 7 tools
-     ├── financial_decorators.py      # 10 tools
-     ├── personal_decorators.py       # 4 tools
-     ├── briefing_decorators.py       # 2 tools
-     ├── operations_decorators.py     # 3 tools
-     ├── menu_engineering_decorators.py  # 5 tools
-     └── image_decorators.py          # 1 tool
+     ├── campfire_decorators.py       # 7 tools (224 lines)
+     ├── briefing_decorators.py       # 2 tools (84 lines)
+     ├── personal_decorators.py       # 4 tools (143 lines)
+     ├── operations_decorators.py     # 3 tools (110 lines)
+     ├── analytics_decorators.py      # 10 tools (360 lines)
+     ├── menu_engineering_decorators.py  # 5 tools (176 lines)
+     └── image_decorators.py          # 1 tool (54 lines)
      ```
-   - **Benefits:** Easier maintenance, faster navigation, cleaner code
-   - **Risk:** LOW - Purely structural, no behavior changes
+   - **Results:**
+     - agent_tools.py: 2,418 lines → 154 lines (94% reduction)
+     - Total codebase: 2,418 lines → 1,305 lines (46% reduction)
+     - All 32 tools verified working
+     - Zero behavior changes (pure structural refactoring)
+   - **Bug Fixed:** Added missing `AGENT_TOOLS` export that was accidentally omitted during initial refactoring
+   - **Status:** ✅ Deployed to production (v0.3.3)
+
+**Features Still Planned:**
 
 9. **⏰ Daily Briefing Cron Automation** (Priority: Medium - Future)
    - **Problem:** Scheduled briefing automation not working
@@ -285,20 +294,21 @@ docker logs -f campfire-ai-bot
 
 ---
 
-**Next Version Target:** v0.3.3 (Agent Tools Refactoring)
-**Status:** 📋 Planning
+**Next Version Target:** v0.4.0 (TBD - Planning)
+**Status:** 🔮 Future planning
 
-**v0.3.2 Status:** ✅ DEPLOYED to production on 2025-10-23
+**v0.3.3 Status:** ✅ DEPLOYED to production on 2025-10-25
 
-**Completed in v0.3.2:**
-- ✅ Menu Engineering bot with 5 profitability analysis tools
-- ✅ Supabase RPC functions for Boston Matrix analysis
-- ✅ Total bots: 8 (was 7)
+**Completed in v0.3.3:**
+- ✅ Agent Tools Refactoring: 2,418 → 154 lines (94% reduction)
+- ✅ 7 modular decorator files by functional domain
+- ✅ 46% total code reduction (2,418 → 1,305 lines)
+- ✅ Bug fix: Added missing AGENT_TOOLS export
+- ✅ All 32 tools verified working
 
-**Planned for v0.3.3:**
-- 🔧 Refactor `agent_tools.py` (2,418 lines → modular structure)
-- 📦 Estimated time: 2-3 hours
-- 🎯 Risk: LOW (no behavior changes)
+**Planned for v0.4.0:**
+- ⏰ Daily Briefing Cron Automation (fix cron job)
+- 🔄 Additional bot enhancements (TBD)
 
 ---
 
@@ -313,7 +323,8 @@ docker logs -f campfire-ai-bot
 | 0.2.4.2 | 2025-10-16 | AI briefing automation | Deployed |
 | 0.3.0 | 2025-10-20 | Haiku 4.5 + Enhanced HTML formatting | Deployed |
 | 0.3.0.1 | 2025-10-21 | Bug fixes + Operations bot + CC Tutor | Deployed |
-| **0.3.2** | **2025-10-23** | **Menu Engineering bot + Boston Matrix** | **✅ IN PRODUCTION** |
+| 0.3.2 | 2025-10-23 | Menu Engineering bot + Boston Matrix | Deployed |
+| **0.3.3** | **2025-10-25** | **Agent Tools Refactoring (46% code reduction)** | **✅ IN PRODUCTION** |
 
 ## Key Features by Version
 
@@ -324,6 +335,7 @@ docker logs -f campfire-ai-bot
 **v0.3.0:** Haiku 4.5 model upgrade + blog-style HTML formatting (5 bots)
 **v0.3.0.1:** Fixed built-in SDK tools, Chinese progress message, Operations + CC Tutor bots (7 bots)
 **v0.3.2:** Menu Engineering bot with 5 profitability analysis tools (8 bots)
+**v0.3.3:** Agent Tools Refactoring - 2,418 → 154 lines (94% reduction), 7 modular decorator files
 
 ## Project File Reference
 
@@ -346,7 +358,7 @@ docker logs -f campfire-ai-bot
 
 ---
 
-**Last Updated:** 2025-10-23
-**Current Status:** v0.3.2 Deployed to Production ✅
+**Last Updated:** 2025-10-25
+**Current Status:** v0.3.3 Deployed to Production ✅
 **Model:** claude-haiku-4-5-20251001 (all 8 bots)
-**Key Achievement:** Menu Engineering bot with Boston Matrix profitability analysis
+**Key Achievement:** Agent Tools Refactoring - 46% code reduction with modular architecture

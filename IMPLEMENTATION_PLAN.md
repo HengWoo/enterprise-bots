@@ -1,16 +1,18 @@
 # Campfire AI Bot - Implementation Guide
 
-**Current Production:** v0.3.2 - Menu Engineering with Boston Matrix
+**Current Production:** v0.3.3 - Agent Tools Refactoring
 **Status:** ✅ All 8 bots active and operational
-**Last Deployed:** October 23, 2025
+**Last Deployed:** October 25, 2025
 
 ---
 
 ## 🔥 Current Status
 
-**Production (v0.3.2):**
+**Production (v0.3.3):**
 - ✅ claude-haiku-4-5-20251001 model across all 8 bots
-- ✅ Menu Engineering bot with 5 profitability analysis tools
+- ✅ Agent Tools Refactoring: 2,418 → 154 lines (94% reduction)
+- ✅ 7 modular decorator files by functional domain (46% total code reduction)
+- ✅ Bug fix: Added missing AGENT_TOOLS export for SDK MCP server
 - ✅ Supabase integration for operations and menu data
 - ✅ FastAPI with stateful sessions (hot/warm/cold paths)
 - ✅ Real-time progress milestones
@@ -142,7 +144,8 @@ sqlite3 /var/once/campfire/db/production.sqlite3 -readonly
 | v1.0.x | Flask-based MVP | ✅ Deprecated |
 | v0.2.0-0.2.2 | FastAPI + Sessions + Knowledge Base | ✅ Deployed |
 | v0.2.3-0.2.4 | Briefing Bot + Multi-Bot System | ✅ Deployed |
-| **v0.3.0** | **Haiku 4.5 + Enhanced HTML** | **✅ IN PRODUCTION** 🔥 |
+| v0.3.0-0.3.2 | Haiku 4.5 + HTML + Menu Engineering | ✅ Deployed |
+| **v0.3.3** | **Agent Tools Refactoring (46% code reduction)** | **✅ IN PRODUCTION** 🔥 |
 
 ---
 
@@ -471,7 +474,7 @@ docker logs -f campfire-ai-bot
 
 ---
 
-**Document Version:** 6.0 (v0.3.2 Deployment Guide)
-**Last Updated:** October 23, 2025
-**Production Status:** v0.3.2 deployed ✅
+**Document Version:** 7.0 (v0.3.3 Deployment Guide)
+**Last Updated:** October 25, 2025
+**Production Status:** v0.3.3 deployed ✅
 **For Details:** See CLAUDE.md (project memory), DESIGN.md (architecture)
