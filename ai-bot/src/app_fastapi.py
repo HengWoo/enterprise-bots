@@ -1,5 +1,5 @@
 """
-Campfire AI Bot - FastAPI webhook server (v0.3.3.1)
+Campfire AI Bot - FastAPI webhook server (v0.4.0)
 Receives Campfire webhooks and responds using Claude Agent SDK with stateful session management
 
 Key Improvements over Flask (v1.0.14):
@@ -38,6 +38,17 @@ v0.3.3.1 Changes:
 - Image analysis now works via Claude Vision API for all 8 bots
 - Supported formats: PNG, JPG, JPEG, GIF, WEBP (up to 5MB)
 - Comprehensive error handling: file validation, format detection, API calls
+
+v0.4.0 Changes (Multi-Bot Collaboration):
+- Distributed peer-to-peer subagent architecture - all 8 bots can spawn other bots as subagents
+- Each bot intelligently delegates to specialists when needed (no centralized orchestrator)
+- English technical guidance for subagent coordination (appended to Chinese prompts)
+- 3 new helper methods: _map_bot_tools_to_subagent_format(), _get_subagents_for_bot(), _get_subagent_guidance()
+- Updated CampfireAgent.__init__ to accept bot_manager parameter
+- Modified _create_client() to add "agents" parameter to ClaudeAgentOptions
+- Parallel subagent execution for faster multi-domain analyses
+- Context isolation: Each subagent runs independently without cluttering main conversation
+- Safety: Recursion prevention, clear delegation rules, cost-aware guidance
 """
 
 import os
@@ -205,7 +216,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Campfire AI Bot",
     description="AI-powered bot for Campfire chat using Claude Agent SDK with API fallback",
-    version="0.3.3.1",
+    version="0.4.0",
     lifespan=lifespan
 )
 
@@ -215,7 +226,7 @@ async def health():
     """Health check endpoint"""
     return {
         'status': 'healthy',
-        'version': '0.3.3.1',
+        'version': '0.4.0',
         'timestamp': datetime.now().isoformat()
     }
 
@@ -383,7 +394,8 @@ async def webhook(
         bot_config=bot_config,
         session_manager=request.app.state.session_manager,
         request_queue=request.app.state.request_queue,
-        campfire_tools=request.app.state.tools
+        campfire_tools=request.app.state.tools,
+        bot_manager=request.app.state.bot_manager  # v0.4.0: For subagent access
     )
 
     print(f"[Webhook] Queued background task for room {room_id}")
@@ -402,7 +414,8 @@ async def process_message_async(
     bot_config,
     session_manager: SessionManager,
     request_queue,
-    campfire_tools: CampfireTools
+    campfire_tools: CampfireTools,
+    bot_manager  # v0.4.0: For subagent coordination
 ):
     """
     Process message in background task.
@@ -456,7 +469,8 @@ async def process_message_async(
                 room_id=room_id,
                 bot_id=bot_config.bot_id,
                 bot_config=bot_config,
-                campfire_tools=campfire_tools
+                campfire_tools=campfire_tools,
+                bot_manager=bot_manager  # v0.4.0: For subagent coordination
             )
 
             print(f"[Background] Calling Claude Agent SDK with model: {bot_config.model}")

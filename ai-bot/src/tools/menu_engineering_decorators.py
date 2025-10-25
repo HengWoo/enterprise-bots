@@ -54,7 +54,42 @@ async def get_menu_profitability_tool(args):
         return {
             "content": [{
                 "type": "text",
-                "text": "⚠️ **Supabase tools not available**"
+                "text": "⚠️ **Supabase tools not available**\n\nSupabase credentials have not been configured. Please set SUPABASE_URL and SUPABASE_KEY environment variables."
+            }]
+        }
+
+    try:
+        start_date = args.get("start_date")
+        end_date = args.get("end_date")
+        min_quantity = args.get("min_quantity", 5)
+
+        result = _supabase_tools.get_menu_profitability(
+            start_date=start_date,
+            end_date=end_date,
+            min_quantity=min_quantity
+        )
+
+        if result["success"]:
+            # Format data for display
+            import json
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Menu Profitability Analysis\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
+                }]
+            }
+        else:
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Error: {result['message']}"
+                }]
+            }
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"Error calling menu profitability tool: {str(e)}"
             }]
         }
 
@@ -85,7 +120,41 @@ Returns: Top profitable dishes with detailed profit breakdown.""",
 async def get_top_profitable_dishes_tool(args):
     """Get top profitable dishes"""
     if not _supabase_tools:
-        return {"content": [{"type": "text", "text": "⚠️ **Supabase tools not available**"}]}
+        return {"content": [{"type": "text", "text": "⚠️ **Supabase tools not available**\n\nSupabase credentials have not been configured. Please set SUPABASE_URL and SUPABASE_KEY environment variables."}]}
+
+    try:
+        start_date = args.get("start_date")
+        end_date = args.get("end_date")
+        top_n = args.get("top_n", 10)
+
+        result = _supabase_tools.get_top_profitable_dishes(
+            start_date=start_date,
+            end_date=end_date,
+            top_n=top_n
+        )
+
+        if result["success"]:
+            import json
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Top {top_n} Profitable Dishes\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
+                }]
+            }
+        else:
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Error: {result['message']}"
+                }]
+            }
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"Error calling top profitable dishes tool: {str(e)}"
+            }]
+        }
 
 
 @tool(
@@ -114,7 +183,41 @@ Returns: Low profit dishes with specific action recommendations.""",
 async def get_low_profit_dishes_tool(args):
     """Get low profit dishes with recommendations"""
     if not _supabase_tools:
-        return {"content": [{"type": "text", "text": "⚠️ **Supabase tools not available**"}]}
+        return {"content": [{"type": "text", "text": "⚠️ **Supabase tools not available**\n\nSupabase credentials have not been configured. Please set SUPABASE_URL and SUPABASE_KEY environment variables."}]}
+
+    try:
+        start_date = args.get("start_date")
+        end_date = args.get("end_date")
+        bottom_n = args.get("bottom_n", 10)
+
+        result = _supabase_tools.get_low_profit_dishes(
+            start_date=start_date,
+            end_date=end_date,
+            bottom_n=bottom_n
+        )
+
+        if result["success"]:
+            import json
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Bottom {bottom_n} Low Profit Dishes\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
+                }]
+            }
+        else:
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Error: {result['message']}"
+                }]
+            }
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"Error calling low profit dishes tool: {str(e)}"
+            }]
+        }
 
 
 @tool(
@@ -142,7 +245,39 @@ Returns: Coverage rate with revenue impact analysis.""",
 async def get_cost_coverage_rate_tool(args):
     """Get cost data coverage analysis"""
     if not _supabase_tools:
-        return {"content": [{"type": "text", "text": "⚠️ **Supabase tools not available**"}]}
+        return {"content": [{"type": "text", "text": "⚠️ **Supabase tools not available**\n\nSupabase credentials have not been configured. Please set SUPABASE_URL and SUPABASE_KEY environment variables."}]}
+
+    try:
+        start_date = args.get("start_date")
+        end_date = args.get("end_date")
+
+        result = _supabase_tools.get_cost_coverage_rate(
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        if result["success"]:
+            import json
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Cost Data Coverage Analysis\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
+                }]
+            }
+        else:
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Error: {result['message']}"
+                }]
+            }
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"Error calling cost coverage rate tool: {str(e)}"
+            }]
+        }
 
 
 @tool(
@@ -171,6 +306,40 @@ Returns: Missing cost dishes ranked by revenue priority.""",
 async def get_dishes_missing_cost_tool(args):
     """Get dishes missing cost data"""
     if not _supabase_tools:
-        return {"content": [{"type": "text", "text": "⚠️ **Supabase tools not available**"}]}
+        return {"content": [{"type": "text", "text": "⚠️ **Supabase tools not available**\n\nSupabase credentials have not been configured. Please set SUPABASE_URL and SUPABASE_KEY environment variables."}]}
+
+    try:
+        start_date = args.get("start_date")
+        end_date = args.get("end_date")
+        top_n = args.get("top_n", 20)
+
+        result = _supabase_tools.get_dishes_missing_cost(
+            start_date=start_date,
+            end_date=end_date,
+            top_n=top_n
+        )
+
+        if result["success"]:
+            import json
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Top {top_n} Dishes Missing Cost Data\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
+                }]
+            }
+        else:
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"Error: {result['message']}"
+                }]
+            }
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"Error calling dishes missing cost tool: {str(e)}"
+            }]
+        }
 
 

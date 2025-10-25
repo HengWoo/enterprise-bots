@@ -93,7 +93,8 @@ class SessionManager:
         room_id: int,
         bot_id: str,
         bot_config: BotConfig,
-        campfire_tools: CampfireTools
+        campfire_tools: CampfireTools,
+        bot_manager
     ) -> Tuple[ClaudeSDKClient, CampfireAgent]:
         """
         Get existing client or create new one using three-tier strategy.
@@ -108,6 +109,7 @@ class SessionManager:
             bot_id: Bot ID
             bot_config: Bot configuration
             campfire_tools: CampfireTools instance
+            bot_manager: BotManager instance (for subagent access in v0.4.0)
 
         Returns:
             Tuple of (ClaudeSDKClient, CampfireAgent)
@@ -146,6 +148,7 @@ class SessionManager:
                 agent = CampfireAgent(
                     bot_config=bot_config,
                     campfire_tools=campfire_tools,
+                    bot_manager=bot_manager,
                     resume_session=session_id  # SDK will resume this session
                 )
             else:
@@ -155,6 +158,7 @@ class SessionManager:
                 agent = CampfireAgent(
                     bot_config=bot_config,
                     campfire_tools=campfire_tools,
+                    bot_manager=bot_manager,
                     resume_session=None  # Fresh session
                 )
 
