@@ -1,0 +1,45 @@
+# Claude Code Ignore File
+# Prevents file watching on large/problematic directories
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Node.js
+node_modules/
+.npm/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# AI Bot specific
+ai-bot/session_cache/
+ai-bot/knowledge-base/
+ai-bot/.claude/
+ai-bot/skills-mcp/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+*~
+
+# Large data files
+*.sqlite3
+*.db
+*.csv
+*.xlsx
+*.tar.gz
+*.zip
+
+# Logs
+*.log
+logs/

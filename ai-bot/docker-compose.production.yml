@@ -1,0 +1,69 @@
+# Campfire AI Bot - PRODUCTION Docker Compose
+# For deployment on DigitalOcean (128.199.175.50)
+# Author: Wu Heng | Date: 2025-10-07
+
+version: '3.8'
+
+services:
+  ai-bot:
+    image: campfire-ai-bot:1.0.4
+    container_name: campfire-ai-bot
+
+    # Restart policy for production
+    restart: unless-stopped
+
+    # Port mapping - external port 5000
+    ports:
+      - "5000:5000"
+
+    # Environment variables from .env file
+    env_file:
+      - .env
+
+    # Production environment overrides
+    environment:
+      - FLASK_PORT=5000
+      - FLASK_HOST=0.0.0.0
+      - TESTING=false
+      - LOG_LEVEL=INFO
+
+    # Volume mounts - PRODUCTION PATHS
+    volumes:
+      # Campfire database (read-only access)
+      - /var/once/campfire/db:/campfire-db:ro
+
+      # Campfire uploaded files (read-only access)
+      - /var/once/campfire/files:/campfire-files:ro
+
+      # AI knowledge base (persistent storage)
+      - /root/ai-knowledge:/app/ai-knowledge
+
+    # Network mode
+    network_mode: bridge
+
+    # Resource limits (production)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# No named volumes - using bind mounts to host filesystem

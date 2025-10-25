@@ -1,0 +1,14 @@
+# Campfire AI Bot - Docker Hub Deployment Commands
+# Generated on: Tue Oct  7 11:10:21 CST 2025
+
+# Pull image from Docker Hub
+docker pull hengwoo/campfire-ai-bot:1.0.4
+
+# Tag locally
+docker tag hengwoo/campfire-ai-bot:1.0.4 campfire-ai-bot:1.0.4
+
+# Verify
+docker images | grep campfire-ai-bot
+
+# Continue with deployment guide...
+# See PRODUCTION_DEPLOYMENT_GUIDE.md

@@ -1,0 +1,633 @@
+# Operations Data Analysis & Reporting Guide
+
+> Comprehensive guide for operations assistant on data analysis, reporting workflows, and KPI interpretation
+
+---
+
+## Quick Navigation
+
+- [Common Workflows](#common-workflows) - Standard operations reporting workflows
+- [Report Templates](#report-templates) - Structured report formats
+- [KPI Interpretation](#kpi-interpretation) - How to analyze key metrics
+- [Analytical Framework](#analytical-framework) - Data analysis methodology
+- [Best Practices](#best-practices) - Professional reporting standards
+
+---
+
+## Common Workflows
+
+### 1. Daily Operations Report
+
+**When to use**: Daily standup, quick status check
+
+**Data to query**:
+- Tasks completed today
+- Tasks in progress
+- Overdue tasks
+- New tasks created
+
+**Analysis framework**:
+1. **Count metrics**: Total tasks, completion rate
+2. **Identify blockers**: Overdue tasks, high-priority items
+3. **Trend check**: Compare with yesterday
+4. **Actionable insights**: What needs attention
+
+**Report structure**:
+```
+📊 Daily Operations Summary - [Date]
+
+### ✅ Completed Today
+- [X] tasks completed
+- Key accomplishments: [list]
+
+### 🔄 In Progress
+- [Y] active tasks
+- On track: [Z]
+- At risk: [W]
+
+### ⚠️ Needs Attention
+- [N] overdue tasks
+- High priority: [list]
+
+### 💡 Insights & Recommendations
+- [Key observation]
+- [Suggested action]
+```
+
+### 2. Weekly Project Status Report
+
+**When to use**: Weekly team meetings, stakeholder updates
+
+**Data to query**:
+- All active projects with status
+- Project progress percentage
+- Tasks completed this week per project
+- Upcoming milestones
+
+**Analysis framework**:
+1. **Progress tracking**: Week-over-week progress
+2. **Velocity analysis**: Tasks completed vs planned
+3. **Risk assessment**: Projects behind schedule
+4. **Resource utilization**: Team allocation
+
+**Report structure**:
+```
+📈 Weekly Project Status - Week [N]
+
+### 🎯 Projects Overview
+Total active: [X] | On track: [Y] | At risk: [Z]
+
+### 📊 Project Details
+[Table with: Project | Status | Progress | Owner | Next Milestone]
+
+### 🔥 Highlights
+- [Major accomplishment]
+- [Key milestone reached]
+
+### ⚠️ Risks & Blockers
+- [Project name]: [Issue] → [Recommendation]
+
+### 📅 Next Week Priorities
+1. [Priority 1]
+2. [Priority 2]
+```
+
+### 3. Monthly Performance Report
+
+**When to use**: Month-end reviews, management reporting
+
+**Data to query**:
+- All tasks/projects created, completed, and active
+- KPI metrics for the month
+- Comparison with previous month
+- Comparison with targets
+
+**Analysis framework**:
+1. **Achievement vs targets**: Did we meet goals?
+2. **Trend analysis**: Month-over-month changes
+3. **Pattern identification**: Recurring issues, success factors
+4. **Predictive insights**: Trajectory for next month
+
+**Report structure**:
+```
+📊 Monthly Operations Report - [Month Year]
+
+### 📈 Key Metrics
+- Tasks completed: [X] ([±Y%] vs last month)
+- Average completion time: [Z] days
+- On-time delivery rate: [W%]
+
+### 🎯 Projects Summary
+- Started: [A] | Completed: [B] | Active: [C]
+- Success rate: [D%]
+
+### 💡 Performance Insights
+**What went well:**
+- [Achievement 1 with data]
+- [Achievement 2 with data]
+
+**Challenges:**
+- [Challenge 1 with impact]
+- [Challenge 2 with impact]
+
+**Trends observed:**
+- [Trend 1]
+- [Trend 2]
+
+### 🎯 Recommendations
+1. [Action item based on data]
+2. [Process improvement suggestion]
+
+### 📅 Outlook for Next Month
+- Projected workload: [estimate]
+- Key milestones: [list]
+```
+
+### 4. Ad-hoc Query Analysis
+
+**When to use**: Specific questions from stakeholders
+
+**Common queries**:
+- "How many tasks did [person] complete this month?"
+- "What projects are behind schedule?"
+- "Show me high-priority tasks"
+- "Which team is most productive?"
+
+**Analysis approach**:
+1. **Clarify the question**: Understand what they really want to know
+2. **Query relevant data**: Get specific, filtered data
+3. **Add context**: Don't just show numbers, explain them
+4. **Provide insights**: Answer the "why" behind the numbers
+5. **Suggest actions**: What should they do with this information
+
+**Response template**:
+```
+🔍 Analysis: [Question]
+
+### 📊 Data Summary
+[Answer with numbers]
+
+### 💡 Context
+[Explain what the numbers mean]
+
+### 📈 Trend
+[How this compares to previous periods]
+
+### ✅ Recommendation
+[Suggested next steps based on data]
+```
+
+---
+
+## Report Templates
+
+### Template 1: Executive Dashboard Format
+
+**Use case**: High-level overview for leadership
+
+```html
+<div style="padding: 10px;">
+  <h2 style="margin: 20px 0 15px 0; padding: 10px 0; border-bottom: 2px solid #2c5aa0;">
+    📊 Operations Dashboard - [Period]
+  </h2>
+
+  <h3 style="margin: 15px 0 10px 0;">🎯 Key Metrics at a Glance</h3>
+
+  <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+    <thead>
+      <tr style="background: #f5f5f5;">
+        <th style="padding: 12px; border: 1px solid #ddd;">Metric</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Current</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Target</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd;">Tasks Completed</td>
+        <td style="padding: 10px; border: 1px solid #ddd;"><strong>150</strong></td>
+        <td style="padding: 10px; border: 1px solid #ddd;">140</td>
+        <td style="padding: 10px; border: 1px solid #ddd; color: #388e3c;">✅ +7%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="background: #f0f7ff; padding: 15px; margin: 15px 0; border-left: 4px solid #2c5aa0;">
+    <strong>💡 Key Insight:</strong> [Main takeaway from the data]
+  </div>
+
+  <div style="background: #fff3cd; padding: 15px; margin: 15px 0; border-left: 4px solid #ffc107;">
+    <strong>⚠️ Action Required:</strong> [What needs immediate attention]
+  </div>
+</div>
+```
+
+### Template 2: Detailed Analysis Format
+
+**Use case**: In-depth analysis for team leads
+
+```html
+<div style="padding: 10px;">
+  <h2 style="margin: 20px 0 15px 0; padding: 10px 0; border-bottom: 2px solid #e0e0e0;">
+    📈 Detailed Analysis: [Topic]
+  </h2>
+
+  <h3 style="margin: 15px 0 10px 0;">📊 Data Overview</h3>
+  <p style="margin: 12px 0; line-height: 1.8;">[Summary of findings]</p>
+
+  <h3 style="margin: 15px 0 10px 0;">🔍 Breakdown by Category</h3>
+  <ul style="margin: 10px 0; padding-left: 25px; line-height: 2.0;">
+    <li style="margin: 8px 0;">Category 1: <strong style="color: #2c5aa0;">[data]</strong></li>
+    <li style="margin: 8px 0;">Category 2: <strong style="color: #2c5aa0;">[data]</strong></li>
+  </ul>
+
+  <h3 style="margin: 15px 0 10px 0;">💡 Insights</h3>
+  <ol style="margin: 10px 0; padding-left: 25px; line-height: 2.0;">
+    <li style="margin: 8px 0;">[Insight 1 with supporting data]</li>
+    <li style="margin: 8px 0;">[Insight 2 with supporting data]</li>
+  </ol>
+
+  <h3 style="margin: 15px 0 10px 0;">✅ Recommendations</h3>
+  <p style="margin: 12px 0; line-height: 1.8;">[Actionable recommendations]</p>
+</div>
+```
+
+---
+
+## KPI Interpretation Guide
+
+### Common Operations KPIs
+
+#### 1. Task Completion Rate
+
+**Formula**: `(Tasks Completed / Total Tasks) × 100`
+
+**Good**: 85% or higher
+**Acceptable**: 70-85%
+**Needs Improvement**: Below 70%
+
+**What it means**:
+- High rate (>90%): Team is efficient, tasks are well-scoped
+- Medium rate (70-85%): Normal, but may indicate some scope creep
+- Low rate (<70%): Tasks may be too ambitious, or blockers exist
+
+**How to report**:
+```
+✅ Task Completion Rate: 87%
+
+💡 Insight: Team is performing well above the 85% target.
+The 2% increase from last month suggests improved planning.
+
+📈 Trend:
+- This month: 87%
+- Last month: 85%
+- 3-month average: 83%
+
+✅ Recommendation: Maintain current processes; consider sharing
+best practices with other teams.
+```
+
+#### 2. Average Task Cycle Time
+
+**Formula**: `Average(Task Completion Date - Task Creation Date)`
+
+**What it means**:
+- Short cycle time: Fast execution, small tasks
+- Long cycle time: Complex tasks, or bottlenecks
+
+**How to interpret**:
+- Compare to historical average
+- Look for outliers (very long or very short)
+- Segment by task type or priority
+
+**How to report**:
+```
+⏱️ Average Cycle Time: 4.2 days
+
+💡 Analysis:
+- High priority: 2.1 days ✅ (Fast response)
+- Medium priority: 4.5 days ✅ (On target)
+- Low priority: 8.3 days ⚠️ (Above 5-day target)
+
+📊 Trend: Overall cycle time decreased by 0.5 days from last month,
+indicating improved efficiency.
+
+🎯 Recommendation: Review low-priority tasks to identify if any
+should be escalated or deprioritized.
+```
+
+#### 3. On-Time Delivery Rate
+
+**Formula**: `(Tasks Completed On/Before Due Date / Total Tasks with Due Dates) × 100`
+
+**Good**: 90% or higher
+**Acceptable**: 80-90%
+**Needs Improvement**: Below 80%
+
+**What it means**:
+- High rate: Good planning and execution
+- Low rate: Unrealistic deadlines or resource issues
+
+**How to report**:
+```
+🎯 On-Time Delivery: 92%
+
+✅ Strong Performance: Team is consistently meeting deadlines.
+
+🔍 Breakdown:
+- On time: 92% (target: 90%)
+- 1-2 days late: 6%
+- >2 days late: 2%
+
+💡 Insight: The 8% of delayed tasks are primarily in the
+"infrastructure" category, suggesting resource bottleneck.
+
+📋 Action: Allocate additional dev resources to infrastructure
+tasks or adjust timelines.
+```
+
+#### 4. Project Progress Velocity
+
+**Formula**: `(Completed Tasks This Week / Total Project Tasks) × 100`
+
+**How to interpret**:
+- Increasing velocity: Project accelerating
+- Decreasing velocity: Possible blockers
+- Consistent velocity: Predictable delivery
+
+**How to report**:
+```
+🚀 Project Velocity: 12% per week
+
+📈 Trend Analysis:
+- Week 1: 8%
+- Week 2: 10%
+- Week 3: 12% ← Current
+- Week 4: 14% (projected)
+
+💡 Insight: Velocity is increasing as team becomes more familiar
+with the codebase. At current pace, project will complete in 6 weeks.
+
+⚠️ Risk: If velocity drops below 10%, we may miss the 8-week deadline.
+
+🎯 Recommendation: Maintain current team allocation; monitor for
+any velocity drops.
+```
+
+---
+
+## Analytical Framework
+
+### STAR Analysis Method
+
+Use this framework for any operations report:
+
+#### S - Situation (Context)
+- What period are we analyzing?
+- What is the baseline/comparison point?
+- What were the goals or targets?
+
+#### T - Task/Metrics (Data)
+- What are the key numbers?
+- How do they compare to targets?
+- What is the trend?
+
+#### A - Analysis (Insights)
+- Why did we see these results?
+- What patterns emerged?
+- What are the root causes?
+
+#### R - Recommendation (Actions)
+- What should we do next?
+- What are the priorities?
+- What are the expected outcomes?
+
+### Example Using STAR
+
+**User asks**: "Generate this week's operations report"
+
+**Your response structure**:
+
+```
+📊 Weekly Operations Report - Week 42
+
+### 📋 Situation
+Analyzing operations data for Week 42 (Oct 14-20, 2025).
+Target: Complete 100 tasks with 90% on-time delivery.
+
+### 📈 Metrics
+- Tasks completed: 118 ✅ (+18% vs target)
+- On-time delivery: 95% ✅ (+5% vs target)
+- Average cycle time: 3.2 days ✅ (-0.8 days)
+
+### 💡 Analysis
+**What went well:**
+- Team exceeded completion target by 18%
+- On-time delivery improved due to better sprint planning
+- Faster cycle time indicates improved efficiency
+
+**Contributing factors:**
+- Reduced context switching (new focus time policy)
+- Better task definition in planning sessions
+- Two new team members fully ramped up
+
+### ✅ Recommendations
+1. **Sustain**: Continue focus time policy
+2. **Improve**: Share planning templates with other teams
+3. **Monitor**: Watch for burnout with high completion rate
+4. **Next Week**: Maintain current pace, aim for 110 tasks
+```
+
+---
+
+## Best Practices
+
+### 1. Always Provide Context
+
+❌ **Bad**: "15 tasks were completed"
+✅ **Good**: "15 tasks were completed this week, which is 25% higher than our 12-task weekly average"
+
+### 2. Compare to Benchmarks
+
+Always include comparison points:
+- Previous period (week, month, quarter)
+- Same period last year
+- Team or company average
+- Industry standard (if available)
+
+### 3. Explain the "So What"
+
+After presenting data, always answer:
+- What does this mean?
+- Why does it matter?
+- What should we do about it?
+
+Example:
+```
+📊 Data: Task completion rate dropped from 90% to 75%
+
+❌ Stop here
+
+✅ Continue:
+💡 This 15% drop is significant because:
+- It's the lowest rate in 6 months
+- It coincides with the Q4 feature freeze
+- 80% of incomplete tasks are blocked by external dependencies
+
+🎯 Recommended actions:
+1. Review and clear external dependencies
+2. Adjust Q4 expectations if freeze continues
+3. Reallocate team to unblocked work
+```
+
+### 4. Use Visual Hierarchy
+
+Structure reports with clear visual hierarchy:
+1. **Executive Summary** (top) - Key numbers and insights
+2. **Detailed Breakdown** (middle) - Data tables and analysis
+3. **Recommendations** (bottom) - Actions and next steps
+
+### 5. Quantify Everything
+
+Use specific numbers instead of vague terms:
+
+❌ "Many tasks are overdue"
+✅ "23 tasks (18% of active tasks) are overdue by an average of 4.5 days"
+
+❌ "Project is behind schedule"
+✅ "Project is 3 weeks behind schedule (15% delay), with 45 of 300 tasks (15%) incomplete"
+
+### 6. Highlight Anomalies
+
+Always call out unusual patterns:
+```
+⚠️ Anomaly Detected:
+
+Task completion rate for Team B is 45%, significantly below
+the company average of 85%.
+
+🔍 Investigation shows:
+- Team recently lost 2 senior members
+- Backlog grew 200% due to urgent client requests
+- Average task complexity score increased from 3 to 7
+
+📋 Immediate actions taken:
+- Allocated 2 contractors to assist Team B
+- Reprioritized 30% of backlog to other teams
+- Extended deadlines for 15 critical tasks
+```
+
+### 7. Make Recommendations Actionable
+
+❌ **Vague**: "Improve task completion rate"
+✅ **Specific**: "Increase task completion rate from 75% to 85% by: (1) Adding 2 developers for 3 weeks, (2) Breaking down tasks >5 days into smaller chunks, (3) Daily standup to clear blockers"
+
+---
+
+## Query Planning Guide
+
+### Before Querying Supabase
+
+Ask yourself:
+1. **What question am I answering?** - Be clear on the user's need
+2. **What data do I need?** - Which tables and columns
+3. **What filters apply?** - Date ranges, status, priority
+4. **What grouping/aggregation?** - Count, average, sum
+5. **What comparison is needed?** - Previous period, target, average
+
+### Example Query Planning
+
+**User asks**: "How is Project Alpha doing?"
+
+**Your mental checklist**:
+- [ ] Get project details (name, status, owner, dates)
+- [ ] Get task statistics (total, completed, in progress, blocked)
+- [ ] Calculate progress percentage
+- [ ] Compare to timeline (on track vs behind)
+- [ ] Identify any risks or blockers
+- [ ] Prepare recommendations
+
+**Queries to run**:
+1. `query_operations_data('projects', filters={'name': 'Project Alpha'})`
+2. `query_operations_data('tasks', filters={'project_id': [alpha_id]})`
+3. Calculate: completion_rate = completed / total
+4. Calculate: days_remaining = due_date - today
+5. Generate summary with insights
+
+---
+
+## Common Mistakes to Avoid
+
+### 1. Data Dump Without Analysis
+
+❌ **Bad Response**:
+```
+Here are all the tasks:
+- Task 1: In Progress
+- Task 2: Completed
+- Task 3: Blocked
+... (50 more tasks)
+```
+
+✅ **Good Response**:
+```
+📊 Task Summary:
+- Total: 53 tasks
+- Completed: 35 (66%)
+- In Progress: 12 (23%)
+- Blocked: 6 (11%)
+
+💡 Key Insight: 11% blocked rate is above our 5% threshold.
+Main blocker: Awaiting API access from external vendor.
+
+🎯 Recommendation: Escalate vendor access request to management.
+```
+
+### 2. Analysis Without Data
+
+❌ **Bad**: "The team is doing great!"
+✅ **Good**: "The team is performing well - 95% on-time delivery rate, which is 5% above target and 10% better than last quarter."
+
+### 3. Ignoring Trends
+
+Always show trends, not just point-in-time data:
+
+❌ "Task completion: 80%"
+✅ "Task completion: 80% (↑ from 72% last month, ↓ from 88% same time last year)"
+
+### 4. No Actionable Follow-up
+
+End every report with clear next steps:
+
+✅ "Next Steps:
+1. [Action owner] will [specific action] by [date]
+2. We will monitor [metric] daily
+3. Review again in [timeframe]"
+
+---
+
+## Quick Reference Formulas
+
+```
+Completion Rate = (Completed Tasks / Total Tasks) × 100
+
+On-Time Rate = (On-Time Completions / Tasks with Deadlines) × 100
+
+Cycle Time = Average(Completion Date - Start Date)
+
+Velocity = Completed Tasks / Time Period
+
+Progress = (Completed Tasks / Total Planned Tasks) × 100
+
+Overdue Rate = (Overdue Tasks / Total Tasks) × 100
+
+Team Utilization = (Assigned Tasks / Team Capacity) × 100
+
+Burndown Rate = Remaining Tasks / Days Remaining
+```
+
+---
+
+**Last Updated**: 2025-10-21
+**Purpose**: Operations assistant analytical guidelines
+**Usage**: Reference for all operations reports and queries

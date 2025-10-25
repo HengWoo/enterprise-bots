@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.env.docker-test
+
+# Docker
+*.tar.gz
+*.tar
+campfire-ai-bot-*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+test_*.json
+!tests/
+
+# Logs
+*.log
+logs/
+
+# AI Knowledge (user data)
+ai-knowledge/
+!ai-knowledge/.gitkeep
+
+# Financial MCP (external dependency)
+financial-mcp/
+!financial-mcp/.gitkeep
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Claude project memory (local only, not pushed to remote)
+CLAUDE.md
+DESIGN.md
+IMPLEMENTATION_PLAN.md
+AGENT_SDK_ANALYSIS.md

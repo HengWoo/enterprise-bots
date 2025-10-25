@@ -1,0 +1,65 @@
+# Campfire AI Bot - LOCAL TESTING Docker Compose
+# Use this for testing the Docker image locally before production deployment
+# Author: Wu Heng | Date: 2025-10-07
+
+version: '3.8'
+
+services:
+  ai-bot:
+    image: campfire-ai-bot:1.0.4  # Use pre-built image with Financial MCP fix and Sonnet 4.5
+    pull_policy: never  # Use local image only, don't pull from registry
+    container_name: campfire-ai-bot-local-test
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Port mapping - use 5001 to avoid conflict with local dev
+    ports:
+      - "5001:5000"
+
+    # Environment variables from .env.docker-test file
+    env_file:
+      - .env.docker-test
+
+    # Additional environment overrides for local testing
+    environment:
+      - FLASK_PORT=5000
+      - FLASK_HOST=0.0.0.0
+      - TESTING=true
+
+    # Volume mounts - LOCAL PATHS
+    volumes:
+      # Local test database (read-only access)
+      - ./tests/fixtures:/campfire-db:ro
+
+      # Financial MCP is now built into the image, no mount needed
+
+      # AI knowledge base (local persistent storage)
+      - ./ai-knowledge:/app/ai-knowledge
+
+    # Network mode
+    network_mode: bridge
+
+    # Resource limits (lighter for local testing)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Note: No named volumes needed for local testing - using bind mounts

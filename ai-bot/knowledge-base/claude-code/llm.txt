@@ -1,0 +1,1008 @@
+# Claude Code Documentation
+
+> Comprehensive knowledge base for learning and using Claude Code - Anthropic's official CLI for AI-powered coding assistance
+
+## About This Knowledge Base
+
+This knowledge base contains curated documentation, guides, and best practices for Claude Code. It is designed to help users learn Claude Code from scratch, master common workflows, and leverage advanced features for maximum productivity.
+
+**Target Audience:** Developers, technical teams, and anyone interested in using AI-assisted coding tools
+
+**Last Updated:** 2025-10-21
+
+**Source:** Official Claude Code documentation from docs.claude.com
+
+---
+
+## What is Claude Code?
+
+Claude Code is Anthropic's official command-line interface (CLI) that brings Claude AI directly into your terminal and development workflow. It provides:
+
+- **Conversational Coding**: Talk to Claude in natural language to write, debug, and refactor code
+- **Codebase Understanding**: Automatic context gathering from your project files
+- **Git Integration**: Conversational Git operations, commit creation, and PR generation
+- **File Operations**: Read, write, and edit files with AI assistance
+- **Built-in Tools**: Web search, file processing, shell commands, and more
+- **MCP Integration**: Connect to Model Context Protocol servers for extended capabilities
+- **Subagents**: Specialized AI agents for specific tasks (code review, debugging, testing, etc.)
+
+**Key Features:**
+- Zero-configuration setup - works with any codebase
+- Permission-based safety - always asks before making changes
+- Session persistence - resume conversations across sessions
+- Customizable - custom slash commands, subagents, and configuration
+- Multiple account types - Claude.ai subscriptions or Claude Console API access
+
+---
+
+## Quick Navigation
+
+### Essential Guides
+
+**Getting Started**
+- [Quickstart Guide](getting-started/quickstart.md) - Get up and running in 5 minutes
+- Installation options (npm, homebrew, native installers)
+- First session walkthrough
+- Essential commands reference
+
+**Common Workflows**
+- [Common Workflows Guide](workflows/common-workflows.md) - Step-by-step task guides
+- Understanding new codebases
+- Bug fixing and debugging
+- Code refactoring
+- Testing and documentation
+- Pull request creation
+- Image analysis
+- Custom slash commands
+
+**MCP Integration**
+- [MCP Integration Guide](mcp/mcp-integration.md) - Connect to external tools via Model Context Protocol
+- Installing MCP servers (HTTP, SSE, stdio)
+- Popular MCP servers by category
+- Authentication and configuration
+- MCP resources and prompts
+- Enterprise MCP management
+
+**Configuration**
+- [Settings Guide](configuration/settings.md) - Configure Claude Code with settings files
+- [VS Code Integration](configuration/vscode.md) - Use Claude Code with Visual Studio Code
+- [Terminal Setup](configuration/terminal-setup.md) - Optimize your terminal experience
+- [Model Configuration](configuration/model-config.md) - Select and configure AI models
+- [Memory Management](configuration/memory-management.md) - Manage Claude's memory with CLAUDE.md files
+
+### Key Capabilities
+
+**Core Features**
+1. **Interactive Mode** - Conversational coding sessions with full context
+2. **Headless Mode** - One-off queries and automation with `-p` flag
+3. **Plan Mode** - Safe code exploration and planning with read-only operations
+4. **Git Integration** - Conversational Git commands and PR creation
+5. **File References** - Use `@file` syntax to reference files and directories
+6. **Extended Thinking** - Deep reasoning for complex tasks (toggle with Tab)
+
+**Advanced Features**
+1. **Subagents** - Specialized AI for code review, debugging, testing, etc.
+2. **MCP Servers** - Connect to external data sources and tools
+3. **Custom Commands** - Create reusable slash commands for your workflow
+4. **Session Management** - Resume and continue previous conversations
+5. **Git Worktrees** - Run parallel sessions with complete isolation
+6. **Unix Integration** - Use Claude as a pipe-able Unix utility
+
+---
+
+## Installation & Setup
+
+### Quick Install
+
+**NPM (requires Node.js 18+):**
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+**Homebrew (macOS, Linux):**
+```bash
+brew install --cask claude-code
+```
+
+**Native Installers:**
+- macOS/Linux/WSL: `curl -fsSL https://claude.ai/install.sh | bash`
+- Windows PowerShell: `irm https://claude.ai/install.ps1 | iex`
+- Windows CMD: `curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd`
+
+### First-Time Setup
+
+1. **Start Claude Code:**
+   ```bash
+   claude
+   ```
+
+2. **Log in** when prompted (credentials are stored after first login):
+   - Claude.ai account (subscription plans - recommended)
+   - Claude Console account (API access with pre-paid credits)
+
+3. **Start coding** - Claude Code is ready to use immediately
+
+---
+
+## Essential Commands
+
+### Command Reference
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `claude` | Start interactive session | `claude` |
+| `claude "task"` | Run one-time task | `claude "fix the build error"` |
+| `claude -p "query"` | Headless mode query | `claude -p "explain this function"` |
+| `claude -c` / `--continue` | Continue most recent conversation | `claude -c` |
+| `claude -r` / `--resume` | Resume a previous conversation | `claude -r` |
+| `claude commit` | Create Git commit | `claude commit` |
+| `claude --permission-mode plan` | Start in Plan Mode | `claude --permission-mode plan` |
+
+### In-Session Commands
+
+| Command | Description |
+|---------|-------------|
+| `/help` | Show available commands |
+| `/clear` | Clear conversation history |
+| `/login` | Switch accounts |
+| `/agents` | Manage subagents |
+| `exit` or Ctrl+C | Exit Claude Code |
+| Tab | Toggle extended thinking on/off |
+| Shift+Tab | Cycle permission modes (Normal → Auto-Accept → Plan) |
+| `?` | Show keyboard shortcuts |
+
+---
+
+## Common Workflows
+
+### Codebase Understanding
+
+**Quick Overview:**
+```
+> give me an overview of this codebase
+> what technologies does this project use?
+> explain the folder structure
+```
+
+**Find Specific Code:**
+```
+> find the files that handle user authentication
+> trace the login process from front-end to database
+```
+
+### Code Changes
+
+**Add Features:**
+```
+> add input validation to the user registration form
+> implement OAuth2 authentication
+```
+
+**Fix Bugs:**
+```
+> there's a bug where users can submit empty forms - fix it
+> I'm seeing an error when I run npm test
+```
+
+**Refactor:**
+```
+> refactor utils.js to use modern JavaScript features
+> update the authentication module to use async/await
+```
+
+### Testing & Documentation
+
+**Write Tests:**
+```
+> add tests for the notification service
+> add test cases for edge conditions
+> run the new tests and fix any failures
+```
+
+**Update Documentation:**
+```
+> add JSDoc comments to the undocumented functions in auth.js
+> update the README with installation instructions
+```
+
+### Git Operations
+
+**Commits:**
+```
+> what files have I changed?
+> commit my changes with a descriptive message
+```
+
+**Pull Requests:**
+```
+> create a pr
+> enhance the PR description with more context
+```
+
+**Branches:**
+```
+> create a new branch called feature/quickstart
+> show me the last 5 commits
+```
+
+### File & Directory References
+
+Use `@` to reference files or directories:
+
+```
+> Explain the logic in @src/utils/auth.js
+> What's the structure of @src/components?
+> Show me @github:repos/owner/repo/issues  # MCP resource
+```
+
+### Image Analysis
+
+Add images to conversations via:
+1. Drag and drop into Claude Code window
+2. Copy/paste with Ctrl+V
+3. Provide file path: `"Analyze this image: /path/to/image.png"`
+
+Example queries:
+```
+> What does this screenshot show?
+> Generate CSS to match this design mockup
+> Here's a screenshot of the error. What's causing it?
+```
+
+---
+
+## Advanced Features
+
+### Plan Mode
+
+**When to Use:**
+- Multi-step implementations requiring many file edits
+- Exploring codebases before making changes
+- Iterative planning with Claude
+
+**How to Enable:**
+```bash
+# Start session in Plan Mode
+claude --permission-mode plan
+
+# Headless Plan Mode
+claude --permission-mode plan -p "Analyze auth system and suggest improvements"
+
+# Toggle during session with Shift+Tab
+# Normal → Auto-Accept → Plan
+```
+
+**Configure as Default:**
+```json
+// .claude/settings.json
+{
+  "permissions": {
+    "defaultMode": "plan"
+  }
+}
+```
+
+### Subagents
+
+**Built-in Subagents:**
+- `code-reviewer` - Security and code quality reviews
+- `debugger` - Bug investigation and fixes
+- `test-runner` - Test execution and failure fixes
+- `refactor-specialist` - Code modernization
+
+**Using Subagents:**
+```
+> /agents  # View and manage subagents
+> use the code-reviewer subagent to check the auth module
+> run all tests and fix any failures  # Auto-delegates to test-runner
+```
+
+**Create Custom Subagents:**
+```
+> /agents
+# Select "Create New subagent" and define:
+# - Type (e.g., api-designer, performance-optimizer)
+# - When to use it
+# - Tool access
+# - System prompt
+```
+
+Save in `.claude/agents/` for team sharing.
+
+### Custom Slash Commands
+
+**Project Commands** (shared with team):
+```bash
+mkdir -p .claude/commands
+echo "Analyze performance and suggest three specific optimizations:" > .claude/commands/optimize.md
+```
+
+Usage: `> /optimize`
+
+**Personal Commands** (user-only):
+```bash
+mkdir -p ~/.claude/commands
+echo "Review code for security vulnerabilities, focusing on:" > ~/.claude/commands/security-review.md
+```
+
+Usage: `> /security-review`
+
+**Commands with Arguments:**
+```bash
+echo 'Find and fix issue #$ARGUMENTS' > .claude/commands/fix-issue.md
+```
+
+Usage: `> /fix-issue 123`
+
+### Extended Thinking
+
+**Enable Extended Thinking:**
+- Press Tab to toggle on/off
+- Use prompts: "think", "think hard", "think deeply"
+- Set `MAX_THINKING_TOKENS` environment variable for always-on
+
+**Best Use Cases:**
+- Complex architectural decisions
+- Challenging bugs
+- Multi-step implementation planning
+- Evaluating tradeoffs
+
+**Thinking Depth Levels:**
+- "think" - Basic extended thinking
+- "think hard", "think more", "think longer" - Deeper thinking
+
+### Session Management
+
+**Continue Most Recent:**
+```bash
+claude --continue
+claude -c --print "Continue with my task"  # Non-interactive
+```
+
+**Resume Specific Conversation:**
+```bash
+claude --resume  # Interactive picker
+```
+
+Shows: session summary, time elapsed, message count, git branch
+
+### Git Worktrees (Parallel Sessions)
+
+**Create Isolated Workspaces:**
+```bash
+# Create worktree with new branch
+git worktree add ../project-feature-a -b feature-a
+
+# Navigate and start Claude
+cd ../project-feature-a
+claude
+```
+
+**Manage Worktrees:**
+```bash
+git worktree list
+git worktree remove ../project-feature-a
+```
+
+**Benefits:**
+- Complete file isolation between Claude sessions
+- Work on multiple tasks simultaneously
+- No interference between instances
+
+### Unix-Style Integration
+
+**Pipe Data:**
+```bash
+cat build-error.txt | claude -p 'explain the root cause' > output.txt
+```
+
+**Output Formats:**
+```bash
+# Text (default)
+claude -p 'summarize data' --output-format text > summary.txt
+
+# JSON (full conversation log)
+claude -p 'analyze bugs' --output-format json > analysis.json
+
+# Streaming JSON (real-time)
+claude -p 'parse log file' --output-format stream-json
+```
+
+**CI/CD Integration:**
+```json
+// package.json
+{
+  "scripts": {
+    "lint:claude": "claude -p 'review changes vs main for typos'"
+  }
+}
+```
+
+---
+
+## MCP Integration
+
+**What is MCP?**
+Model Context Protocol - a standard for connecting Claude to external data sources and tools.
+
+**Common MCP Servers:**
+- GitHub integration (issues, PRs, repositories)
+- Database connections (PostgreSQL, SQLite)
+- File systems and cloud storage
+- API integrations
+
+**Using MCP Resources:**
+```
+> Show me @github:repos/owner/repo/issues
+> Query @database:users table
+```
+
+Format: `@server:resource`
+
+**Configuration:**
+MCP servers are configured in `.claude/mcp.json` or settings files.
+
+---
+
+## Configuration & Customization
+
+### Settings Locations
+
+1. **User Settings**: `~/.claude/settings.json` (all projects)
+2. **Project Settings**: `.claude/settings.json` (current project)
+3. **Environment Variables**: Shell environment
+
+### Common Settings
+
+```json
+{
+  "permissions": {
+    "defaultMode": "plan"  // or "normal" or "auto"
+  },
+  "model": "claude-sonnet-4-5",
+  "maxTokens": 4096
+}
+```
+
+### Environment Variables
+
+- `MAX_THINKING_TOKENS` - Enable extended thinking by default
+- `ANTHROPIC_API_KEY` - API key for Console accounts
+- Custom MCP server configurations
+
+---
+
+## Best Practices
+
+### Effective Prompting
+
+**Be Specific:**
+❌ "fix the bug"
+✅ "fix the login bug where users see a blank screen after entering wrong credentials"
+
+**Break Down Complex Tasks:**
+```
+> 1. create a new database table for user profiles
+> 2. create an API endpoint to get and update user profiles
+> 3. build a webpage that allows users to see and edit their information
+```
+
+**Let Claude Explore First:**
+```
+> analyze the database schema
+> explain the authentication flow
+# Then make changes after understanding context
+```
+
+### Project Organization
+
+**Use CLAUDE.md:**
+- Place at project root
+- Include project context, conventions, and preferences
+- Automatically loaded in each session
+
+**Custom Commands:**
+- Create in `.claude/commands/` for team sharing
+- Document common workflows and standards
+- Use $ARGUMENTS for flexible commands
+
+**Subagents:**
+- Define project-specific subagents in `.claude/agents/`
+- Limit tool access to minimum needed
+- Use descriptive names and descriptions
+
+### Safety & Permissions
+
+**Permission Modes:**
+1. **Normal** - Ask before every file change (safest)
+2. **Auto-Accept** - Automatically accept changes (faster)
+3. **Plan** - Read-only exploration (safest for analysis)
+
+**Toggle with Shift+Tab** during sessions.
+
+**Always Review:**
+- Check generated code before accepting
+- Review PR descriptions before submitting
+- Verify test coverage and edge cases
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Authentication:**
+```
+> /login  # Re-authenticate or switch accounts
+```
+
+**Model Access:**
+- Claude.ai subscriptions: Access to all models based on plan
+- Console API: Requires model access in workspace
+
+**Performance:**
+- Use Plan Mode for large codebases
+- Reference specific files with `@` to reduce context
+- Create focused subagents for specialized tasks
+
+**Git Integration:**
+- Ensure `.git` directory exists
+- Check Git configuration (user.name, user.email)
+- Verify branch permissions for PR creation
+
+### Getting Help
+
+**In Claude Code:**
+```
+> /help
+> how do I [task]?
+> what are the limitations of Claude Code?
+```
+
+**External Resources:**
+- Official Documentation: docs.claude.com
+- GitHub Issues: github.com/anthropics/claude-code/issues
+- Community Discord: anthropic.com/discord
+
+---
+
+## Learning Path
+
+### Beginner (Day 1)
+
+1. **Install and Setup** - Get Claude Code running
+2. **Quickstart Guide** - Complete the 8-step tutorial
+3. **Essential Commands** - Learn `claude`, `claude -p`, `/help`
+4. **First Changes** - Make simple code edits with approval
+
+### Intermediate (Week 1)
+
+1. **Common Workflows** - Practice codebase exploration, bug fixes, refactoring
+2. **Git Integration** - Use conversational Git commands and PR creation
+3. **File References** - Master `@` syntax for files and directories
+4. **Custom Commands** - Create your first slash command
+
+### Advanced (Month 1)
+
+1. **Plan Mode** - Use for complex refactoring and architecture planning
+2. **Subagents** - Create custom subagents for your workflow
+3. **MCP Integration** - Connect to external data sources
+4. **Extended Thinking** - Leverage deep reasoning for complex problems
+5. **Unix Integration** - Build automated workflows with pipes and scripts
+
+---
+
+## MCP Integration - Model Context Protocol
+
+**Full Guide:** [mcp/mcp-integration.md](mcp/mcp-integration.md)
+
+### What is MCP?
+
+Model Context Protocol (MCP) is an open-source standard for AI-tool integrations. It gives Claude Code access to external tools, databases, and APIs.
+
+**Use Cases:**
+- Implement features from issue trackers (Jira, Linear, Asana)
+- Analyze monitoring data (Sentry, monitoring services)
+- Query databases (PostgreSQL, MySQL, etc.)
+- Integrate designs (Figma, Canva)
+- Automate workflows (Gmail, Slack)
+
+### Installing MCP Servers
+
+**Three Methods:**
+
+1. **HTTP Server (Recommended):**
+   ```bash
+   claude mcp add --transport http notion https://mcp.notion.com/mcp
+   ```
+
+2. **SSE Server (Deprecated):**
+   ```bash
+   claude mcp add --transport sse asana https://mcp.asana.com/sse
+   ```
+
+3. **stdio Server (Local):**
+   ```bash
+   claude mcp add --transport stdio airtable --env AIRTABLE_API_KEY=KEY \
+     -- npx -y airtable-mcp-server
+   ```
+
+### Popular MCP Servers
+
+**Development & Testing:**
+- Sentry - Monitor errors and debug production issues
+- Socket - Security analysis for dependencies
+- Hugging Face - Access AI models and applications
+- Jam - Debug with AI agents
+
+**Project Management:**
+- Notion, Linear, Atlassian (Jira/Confluence)
+- Asana, Monday, ClickUp
+- Box, Intercom, Fireflies
+
+**Databases & Data:**
+- Airtable, HubSpot, Daloopa
+
+**Payments & Commerce:**
+- Stripe, PayPal, Square, Plaid
+
+**Design & Media:**
+- Figma, Canva, invideo, Cloudinary
+
+**Infrastructure & DevOps:**
+- Cloudflare, Netlify, Vercel, Stytch
+
+**Automation:**
+- Zapier, Workato
+
+### MCP Scopes
+
+**Local Scope (Default):**
+- Personal, project-specific
+- Not shared with team
+- For experiments and sensitive credentials
+
+**Project Scope:**
+- Stored in `.mcp.json` (version controlled)
+- Shared with all team members
+- For team tools and project-specific services
+
+**User Scope:**
+- Available across all your projects
+- Personal utilities and dev tools
+- Stored in user settings
+
+### Managing MCP Servers
+
+```bash
+# List all servers
+claude mcp list
+
+# Get details
+claude mcp get github
+
+# Remove server
+claude mcp remove github
+
+# Within Claude Code
+/mcp
+```
+
+### Authentication
+
+Many MCP servers require OAuth 2.0:
+
+```bash
+# Add server
+claude mcp add --transport http sentry https://mcp.sentry.dev/mcp
+
+# Authenticate
+> /mcp
+```
+
+### MCP Resources and Prompts
+
+**Use @ to reference MCP resources:**
+```
+> Analyze @github:issue://123 and suggest a fix
+> Review @docs:file://api/authentication
+```
+
+**Execute MCP prompts as slash commands:**
+```
+> /mcp__github__pr_review 456
+> /mcp__jira__create_issue "Bug" high
+```
+
+### Enterprise MCP
+
+Organizations can centrally manage MCP servers via `managed-mcp.json`:
+
+- macOS: `/Library/Application Support/ClaudeCode/managed-mcp.json`
+- Windows: `C:\ProgramData\ClaudeCode\managed-mcp.json`
+- Linux: `/etc/claude-code/managed-mcp.json`
+
+Control access with `allowedMcpServers` and `deniedMcpServers` in `managed-settings.json`.
+
+---
+
+## Configuration
+
+**Full Guides:**
+- [Settings](configuration/settings.md)
+- [VS Code](configuration/vscode.md)
+- [Terminal Setup](configuration/terminal-setup.md)
+- [Model Configuration](configuration/model-config.md)
+- [Memory Management](configuration/memory-management.md)
+
+### Settings Files
+
+**Precedence (highest to lowest):**
+
+1. **Enterprise Managed** (`managed-settings.json`) - IT/DevOps deployed
+2. **Command Line** - Temporary session overrides
+3. **Local Project** (`.claude/settings.local.json`) - Personal project settings
+4. **Project** (`.claude/settings.json`) - Team-shared settings
+5. **User** (`~/.claude/settings.json`) - Personal global settings
+
+**Access Settings:**
+```bash
+# Interactive configuration
+/config
+```
+
+**Example settings.json:**
+```json
+{
+  "permissions": {
+    "allow": ["Bash(npm run lint)", "Bash(npm run test:*)"],
+    "deny": ["Read(./.env)", "Read(./secrets/**)", "WebFetch"]
+  },
+  "model": "sonnet",
+  "env": {
+    "DISABLE_TELEMETRY": "1"
+  }
+}
+```
+
+### Model Configuration
+
+**Model Aliases:**
+
+| Alias | Behavior |
+|-------|----------|
+| `default` | Recommended based on account |
+| `sonnet` | Latest Sonnet (currently 4.5) |
+| `opus` | Opus for complex reasoning (4.1) |
+| `haiku` | Fast and efficient Haiku |
+| `sonnet[1m]` | Sonnet with 1M token context |
+| `opusplan` | Opus for planning, Sonnet for execution |
+
+**Set Model:**
+```bash
+# During session
+/model opus
+
+# At startup
+claude --model sonnet
+
+# Via environment
+export ANTHROPIC_MODEL=opus
+
+# Via settings
+{"model": "opus"}
+```
+
+**Model Selection Guide:**
+- **Sonnet**: Daily coding, refactoring, bug fixes
+- **Opus**: Architectural decisions, complex algorithms
+- **Haiku**: Simple tasks, quick fixes, formatting
+- **Opusplan**: Large features with planning phase
+
+### Memory Management
+
+**Four Memory Types:**
+
+1. **Enterprise Policy** - Organization-wide (highest priority)
+2. **Project Memory** (`CLAUDE.md`) - Team-shared
+3. **User Memory** (`~/.claude/CLAUDE.md`) - Personal global
+4. **Project Local** (`CLAUDE.local.md`) - Deprecated, use imports
+
+**Quick Memory Management:**
+
+```bash
+# Add memory with # shortcut
+# Always use descriptive variable names
+
+# Edit memories
+/memory
+
+# Initialize project memory
+/init
+```
+
+**CLAUDE.md Imports:**
+```markdown
+See @README for project overview
+
+# Additional Instructions
+- git workflow @docs/git-instructions.md
+- @~/.claude/my-project-instructions.md
+```
+
+**What to Include in Project Memory:**
+- Frequently used commands (build, test, lint)
+- Code style preferences
+- Architectural patterns
+- Naming conventions
+
+### VS Code Integration
+
+**VS Code Extension (Beta):**
+- Native IDE experience with sidebar panel
+- Plan mode with editing
+- Auto-accept edits mode
+- MCP server usage
+- Conversation history
+
+**Install:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code)
+
+**Legacy CLI Integration:**
+- Auto-installs when running `claude` from VS Code terminal
+- Selection context sharing
+- Diff viewing in IDE
+- File reference shortcuts (`Cmd+Option+K` or `Alt+Ctrl+K`)
+
+### Terminal Setup
+
+**Line Breaks:**
+- Quick: `\` + Enter
+- Setup: Run `/terminal-setup` for Shift+Enter
+- Option+Enter: Configure in terminal settings
+
+**Notifications (iTerm2):**
+- Settings → Profiles → Terminal
+- Enable "Silence bell"
+- Filter Alerts → "Send escape sequence-generated alerts"
+
+**Large Inputs:**
+- Avoid pasting very long content
+- Use file-based workflows instead
+
+**Vim Mode:**
+- Enable: `/vim` or `/config`
+- Supports basic Vim commands (modes, navigation, editing)
+
+### Environment Variables
+
+**Key Variables:**
+
+**Authentication:**
+- `ANTHROPIC_API_KEY` - API key for Claude SDK
+- `ANTHROPIC_AUTH_TOKEN` - Custom Authorization header
+
+**Models:**
+- `ANTHROPIC_MODEL` - Override default model
+- `ANTHROPIC_DEFAULT_HAIKU_MODEL` - Haiku-class model
+- `ANTHROPIC_DEFAULT_SONNET_MODEL` - Sonnet-class model
+- `ANTHROPIC_DEFAULT_OPUS_MODEL` - Opus-class model
+
+**Features:**
+- `MAX_THINKING_TOKENS` - Enable extended thinking
+- `DISABLE_PROMPT_CACHING` - Disable prompt caching
+- `DISABLE_TELEMETRY` - Opt out of telemetry
+- `MCP_TIMEOUT` - MCP server startup timeout
+- `MAX_MCP_OUTPUT_TOKENS` - Max MCP output (default: 25000)
+
+**Third-Party Providers:**
+- `CLAUDE_CODE_USE_BEDROCK` - Use Amazon Bedrock
+- `CLAUDE_CODE_USE_VERTEX` - Use Google Vertex AI
+
+### Permission Settings
+
+**Permission Modes:**
+- **normal**: Ask before every change (safest)
+- **acceptEdits**: Auto-accept changes (faster)
+- **plan**: Read-only exploration
+
+**Permission Rules:**
+```json
+{
+  "permissions": {
+    "allow": ["Bash(git diff:*)"],
+    "ask": ["Bash(git push:*)"],
+    "deny": ["WebFetch", "Read(./.env)"],
+    "defaultMode": "acceptEdits"
+  }
+}
+```
+
+### Tools Available to Claude
+
+| Tool | Description | Permission? |
+|------|-------------|-------------|
+| Bash | Execute shell commands | Yes |
+| Edit | Make targeted file edits | Yes |
+| Read | Read file contents | No |
+| Write | Create/overwrite files | Yes |
+| Glob | Find files by pattern | No |
+| Grep | Search file contents | No |
+| WebSearch | Web searches | Yes |
+| WebFetch | Fetch URL content | Yes |
+| Task | Run sub-agent | No |
+| SlashCommand | Run custom command | Yes |
+
+---
+
+## Additional Resources
+
+### Official Documentation
+
+- Quickstart: [getting-started/quickstart.md](getting-started/quickstart.md)
+- Common Workflows: [workflows/common-workflows.md](workflows/common-workflows.md)
+- MCP Integration: [mcp/mcp-integration.md](mcp/mcp-integration.md)
+- Settings: [configuration/settings.md](configuration/settings.md)
+- VS Code: [configuration/vscode.md](configuration/vscode.md)
+- Terminal Setup: [configuration/terminal-setup.md](configuration/terminal-setup.md)
+- Model Config: [configuration/model-config.md](configuration/model-config.md)
+- Memory Management: [configuration/memory-management.md](configuration/memory-management.md)
+- Web Docs: https://docs.claude.com/en/docs/claude-code
+
+### Community & Support
+
+- GitHub: https://github.com/anthropics/claude-code
+- Discord: https://anthropic.com/discord
+- Reference Implementation: https://github.com/anthropics/claude-code/tree/main/.devcontainer
+
+### Related Technologies
+
+- **Anthropic Claude API**: The AI model powering Claude Code
+- **Model Context Protocol (MCP)**: Standard for connecting to external tools
+- **Agent SDK**: Framework for building AI agents with Claude
+
+---
+
+## Appendix
+
+### Glossary
+
+- **Headless Mode**: Non-interactive mode using `-p` flag for one-off queries
+- **Interactive Mode**: Conversational session in terminal with `claude` command
+- **MCP**: Model Context Protocol - standard for external tool integration
+- **Subagent**: Specialized AI agent for specific tasks (code review, debugging, etc.)
+- **Plan Mode**: Read-only mode for safe codebase exploration and planning
+- **Extended Thinking**: Deep reasoning capability for complex problems
+- **Git Worktree**: Separate working directory for parallel development
+- **Slash Command**: Custom command starting with `/` for quick prompts
+
+### Version Information
+
+This knowledge base is based on Claude Code documentation as of October 2025. Features and capabilities are subject to change with updates.
+
+For the latest information, always refer to:
+- In-app help: `> /help` or `> what's new in Claude Code?`
+- Official docs: https://docs.claude.com/en/docs/claude-code
+
+---
+
+## Usage Guidelines for AI Assistants
+
+When using this knowledge base to help users with Claude Code:
+
+1. **Start with User Level**: Assess if they're beginner, intermediate, or advanced
+2. **Reference Specific Sections**: Point to relevant workflow guides and examples
+3. **Provide Actionable Steps**: Give clear, executable commands and examples
+4. **Encourage Exploration**: Suggest trying features hands-on
+5. **Explain Tradeoffs**: Help users choose between options (e.g., Plan Mode vs Normal Mode)
+6. **Stay Current**: Claude Code features evolve - encourage checking latest docs
+7. **Be Specific**: Tailor advice to their tech stack and use case
+8. **Progressive Disclosure**: Start simple, introduce advanced features as needed
+
+Remember: Claude Code itself has access to its own documentation and can answer questions about its capabilities. Encourage users to ask Claude Code directly for real-time, contextual help.
+
+---
+
+**End of llm.txt**
+
+*This knowledge base is maintained for the Claude Code Tutor bot in the Campfire AI Bot system.*
+*For questions or updates, refer to the project documentation in CLAUDE.md, DESIGN.md, and IMPLEMENTATION_PLAN.md.*

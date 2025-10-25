@@ -1,0 +1,84 @@
+version: '3.8'
+
+# Campfire AI Bot - Production Docker Compose
+# Multi-MCP Support: Campfire + Financial MCP
+# Author: Wu Heng | Date: 2025-10-06
+
+services:
+  ai-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: campfire-ai-bot
+    image: campfire-ai-bot:latest
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Port mapping (production: 5000, local dev: 5001)
+    ports:
+      - "${FLASK_PORT:-5000}:5000"
+
+    # Environment variables from .env file
+    env_file:
+      - .env
+
+    # Additional environment overrides
+    environment:
+      - CAMPFIRE_DB_PATH=/campfire-db/production.sqlite3
+      - FINANCIAL_MCP_PATH=/app/financial-mcp
+      - BOTS_DIR=/app/bots
+
+    # Volume mounts
+    volumes:
+      # Campfire database (read-only access)
+      - /var/once/campfire/db:/campfire-db:ro
+
+      # Campfire files (read-only access)
+      - /var/once/campfire/files:/campfire-files:ro
+
+      # Financial MCP (mount external repo - read-only)
+      # This allows updating Financial MCP without rebuilding image
+      - /root/fin-report-agent:/app/financial-mcp:ro
+
+      # Bot configurations (external, hot-reloadable)
+      # This allows adding/editing bots without rebuilding image
+      - /root/ai-bots:/app/bots
+
+      # AI knowledge base (persistent, read-write)
+      # This named volume survives container recreation
+      - ai-knowledge:/app/ai-knowledge
+
+    # Network mode: bridge (isolated) or host (simpler)
+    # bridge = better security, host = easier networking
+    network_mode: bridge
+
+    # Resource limits (prevent runaway processes)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Logging configuration (prevent log bloat)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Named volumes (managed by Docker)
+volumes:
+  ai-knowledge:
+    driver: local

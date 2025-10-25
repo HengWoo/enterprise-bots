@@ -1,0 +1,17 @@
+{
+  "user_id": 999,
+  "preferences": {
+    "language": "en",
+    "tone": "professional",
+    "timezone": "UTC+8"
+  },
+  "expertise": [
+    "finance",
+    "data analysis",
+    "forecasting"
+  ],
+  "conversation_memory": [
+    "Discussed Q4 planning on 2025-01-15"
+  ],
+  "last_updated": "2025-10-06T12:45:51.649872"
+}

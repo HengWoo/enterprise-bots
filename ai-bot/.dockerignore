@@ -1,0 +1,70 @@
+# Docker ignore file - exclude from image build
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (exclude most, keep key ones)
+TESTING_COMPLETE.md
+FILE_ANALYSIS_TEST_RESULTS.md
+IMPLEMENTATION_COMPLETE.md
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.tmp
+.DS_Store
+
+# Test fixtures
+tests/
+
+# Docker files
+.dockerignore
+
+# User data (mounted as volumes)
+user_contexts/
+ai-knowledge/
+
+# Development scripts
+test_*.sh
+*.tar.gz
+
+# CI/CD
+.github/
