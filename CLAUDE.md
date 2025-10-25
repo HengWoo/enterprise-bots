@@ -12,11 +12,20 @@
 
 ## 🔥 Current Production Status
 
-**Production Version:** v0.3.3 ✅
+**Production Version:** v0.3.3.1 ✅
 **Last Deployed:** 2025-10-25
 **Status:** All systems operational
 
-**Latest Changes (v0.3.3):**
+**Latest Changes (v0.3.3.1):**
+- ✅ **CRITICAL FIX**: Implemented missing `process_image_tool` function body
+  - Previous bug: Function was declared but had no implementation (empty body)
+  - Symptom: Image processing returned "不支持的文件格式" error
+  - Impact: All 8 bots now support image analysis via Claude Vision API
+  - Implementation: 97-line function with error handling for file validation, format detection, and Vision API calls
+  - Supported formats: PNG, JPG, JPEG, GIF, WEBP (up to 5MB)
+  - Test coverage: File not found, unsupported format, API key validation
+
+**Previous Version (v0.3.3):**
 - ✅ Agent Tools Refactoring: Split 2,418-line monolithic file into 7 modular files
 - ✅ 46% code reduction (2,418 → 1,305 total lines)
 - ✅ Improved maintainability with domain-separated tool modules
@@ -32,6 +41,7 @@
 - ✅ Financial MCP Server (Excel analysis)
 - ✅ Skills MCP (progressive skill disclosure)
 - ✅ Supabase Integration (Operations + Menu Engineering)
+- ✅ **NEW**: Image Processing with Claude Vision API (all bots)
 
 ---
 
@@ -45,7 +55,7 @@ AI-powered intelligent bot system for Campfire group chat that transforms team c
 - **Domain:** https://chat.smartice.ai
 - **Platform:** Campfire (37signals ONCE) - auto-updates nightly at 2am
 - **Database:** SQLite at `/var/once/campfire/db/production.sqlite3` (WAL mode)
-- **AI Service:** `/root/ai-service/` (Docker: hengwoo/campfire-ai-bot:0.3.3)
+- **AI Service:** `/root/ai-service/` (Docker: hengwoo/campfire-ai-bot:0.3.3.1)
 - **Knowledge Base:** `/root/ai-knowledge/company_kb/`
 
 ## Bot Configuration
@@ -324,7 +334,8 @@ docker logs -f campfire-ai-bot
 | 0.3.0 | 2025-10-20 | Haiku 4.5 + Enhanced HTML formatting | Deployed |
 | 0.3.0.1 | 2025-10-21 | Bug fixes + Operations bot + CC Tutor | Deployed |
 | 0.3.2 | 2025-10-23 | Menu Engineering bot + Boston Matrix | Deployed |
-| **0.3.3** | **2025-10-25** | **Agent Tools Refactoring (46% code reduction)** | **✅ IN PRODUCTION** |
+| 0.3.3 | 2025-10-25 | Agent Tools Refactoring (46% code reduction) | Deployed |
+| **0.3.3.1** | **2025-10-25** | **CRITICAL: Implemented missing process_image_tool function body** | **✅ IN PRODUCTION** |
 
 ## Key Features by Version
 
@@ -336,6 +347,7 @@ docker logs -f campfire-ai-bot
 **v0.3.0.1:** Fixed built-in SDK tools, Chinese progress message, Operations + CC Tutor bots (7 bots)
 **v0.3.2:** Menu Engineering bot with 5 profitability analysis tools (8 bots)
 **v0.3.3:** Agent Tools Refactoring - 2,418 → 154 lines (94% reduction), 7 modular decorator files
+**v0.3.3.1:** Image processing bug fix - implemented missing process_image_tool body (97 lines), enables Vision API for all bots
 
 ## Project File Reference
 
