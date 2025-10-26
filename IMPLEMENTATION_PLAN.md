@@ -1,24 +1,34 @@
 # Campfire AI Bot - Implementation Guide
 
-**Current Production:** v0.3.3 - Agent Tools Refactoring
-**Status:** ✅ All 8 bots active and operational
-**Last Deployed:** October 25, 2025
+**Current Production:** v0.3.3.1 - Image Processing Fix
+**Ready for Deployment:** v0.4.0 - Multi-Bot Collaboration + Security Fixes
+**Status:** ✅ Testing complete, approved for production
+**Last Deployed:** October 25, 2025 (v0.3.3.1)
 
 ---
 
 ## 🔥 Current Status
 
-**Production (v0.3.3):**
+**Production (v0.3.3.1):**
 - ✅ claude-haiku-4-5-20251001 model across all 8 bots
 - ✅ Agent Tools Refactoring: 2,418 → 154 lines (94% reduction)
 - ✅ 7 modular decorator files by functional domain (46% total code reduction)
-- ✅ Bug fix: Added missing AGENT_TOOLS export for SDK MCP server
+- ✅ Image processing with Claude API (all bots)
 - ✅ Supabase integration for operations and menu data
 - ✅ FastAPI with stateful sessions (hot/warm/cold paths)
 - ✅ Real-time progress milestones
 - ✅ Knowledge base integration (Claude Code tutorials)
 - ✅ Daily briefing automation
 - ✅ Financial MCP server for Excel analysis
+
+**Ready for Deployment (v0.4.0):**
+- ✅ Multi-bot collaboration via Task tool (8 subagent spawns tested)
+- ✅ Critical security fixes (all 8 bots read-only)
+- ✅ Subagent security verification (safe tools only)
+- ✅ System prompt guardrails (all 8 bot configs updated)
+- ✅ Comprehensive testing complete (13/13 scenarios passed)
+- ✅ Security status: Perfect (0 violations)
+- ✅ Documentation complete (test results, deployment guide)
 
 **Active Bots:**
 1. 财务分析师 (Financial Analyst) - `2-CsheovnLtzjM`
@@ -173,6 +183,121 @@ sqlite3 /var/once/campfire/db/production.sqlite3 -readonly
 - [ ] Verify knowledge base access
 - [ ] Check daily briefing generation
 - [ ] Monitor logs for 24 hours
+
+---
+
+## 🚀 v0.4.0 Deployment Instructions
+
+### Pre-Deployment Checklist
+- [x] Local testing complete (13/13 tests passed)
+- [x] Security verification perfect (0 violations)
+- [x] User confirmation received
+- [x] Version numbers updated in code
+- [x] Documentation updated (CLAUDE.md, DESIGN.md, IMPLEMENTATION_PLAN.md)
+- [x] Test results documented (V0.4.0_LOCAL_TEST_RESULTS.md)
+
+### v0.4.0 Deployment Steps
+
+#### Step 1: Build Docker Image
+```bash
+cd /Users/heng/Development/campfire/ai-bot
+
+# Build for production (linux/amd64)
+docker buildx build --platform linux/amd64 \
+  -t hengwoo/campfire-ai-bot:0.4.0 \
+  -t hengwoo/campfire-ai-bot:latest .
+```
+
+#### Step 2: Push to Docker Hub
+```bash
+# Push versioned tag
+docker push hengwoo/campfire-ai-bot:0.4.0
+
+# Push latest tag
+docker push hengwoo/campfire-ai-bot:latest
+```
+
+#### Step 3: Deploy to Production
+```bash
+# SSH to server (use DigitalOcean console - SSH blocked by Cloudflare VPN)
+ssh root@128.199.175.50
+
+# Navigate to service directory
+cd /root/ai-service
+
+# Stop existing container
+docker-compose down
+
+# Pull latest image
+docker pull hengwoo/campfire-ai-bot:latest
+
+# Start new container
+docker-compose up -d
+```
+
+#### Step 4: Monitor Deployment
+```bash
+# Check logs for startup
+docker logs -f campfire-ai-bot
+
+# Monitor for Task tool usage
+docker logs -f campfire-ai-bot | grep -E "(Task|subagent|Security)"
+
+# Check health endpoint
+curl http://localhost:5000/health
+```
+
+#### Step 5: Verification Testing
+```bash
+# Test multi-bot collaboration (via Campfire web interface)
+# @运营数据助手 请分析哪些菜品的利润率最高，按照波士顿矩阵分类
+
+# Verify security (check logs for dangerous tools)
+docker logs campfire-ai-bot | grep -E "(Edit|Write|Bash)"
+# Expected: No matches (all bots read-only)
+
+# Test all 8 bots with simple requests
+# @财务分析师 介绍一下你的功能
+# @技术助手 你好
+# @个人助手 你能帮我什么
+# etc.
+```
+
+### v0.4.0 Key Changes to Monitor
+
+**New Features:**
+- Multi-bot collaboration via Task tool
+- Subagent spawning (Operations → Menu Engineer, etc.)
+- Cross-domain analysis (multi-bot chains)
+
+**Security Changes:**
+- All bots are read-only (no Write/Edit/Bash)
+- Subagents also respect security restrictions
+- Two-layer protection (code + prompt)
+
+**Expected Behavior:**
+- Task tool should spawn subagents successfully
+- No Edit/Write/Bash tool calls in any scenario
+- Bots report issues instead of attempting fixes
+- Response times may be slightly longer for multi-bot requests (15-30s)
+
+### Rollback Plan (if needed)
+
+If v0.4.0 causes critical issues:
+
+```bash
+cd /root/ai-service
+docker-compose down
+docker pull hengwoo/campfire-ai-bot:0.3.3.1
+docker-compose up -d
+docker logs -f campfire-ai-bot
+```
+
+**Rollback Triggers:**
+- ANY security violation (Edit/Write/Bash usage)
+- > 10% request failure rate
+- Critical performance degradation (> 60s response times)
+- User-reported data corruption
 
 ---
 

@@ -50,132 +50,60 @@ class CampfireAgent:
 
     def _get_allowed_tools_for_bot(self) -> list:
         """
-        Get allowed tools based on bot configuration.
+        Get allowed tools based on bot configuration (v0.4.0: Config-Driven Architecture).
+
+        New approach: Read tools from bot config's mcp_servers and tools dict.
+        Automatically generate MCP names with correct prefixes.
 
         Returns:
             List of tool names including both MCP tools and built-in SDK tools
         """
-        # Built-in SDK tools (available by default unless restricted)
-        # Reference: https://docs.claude.com/en/api/agent-sdk/overview
-        builtin_tools = [
-            "WebSearch",      # Search the web for information
-            "WebFetch",       # Fetch web page content
-            "Read",           # Read file contents
-            "Write",          # Write to files
-            "Edit",           # Edit files
-            "Bash",           # Execute shell commands
-            "Grep",           # Search within files
-            "Glob",           # Find files by pattern
-            "Task"            # v0.4.0: Spawn subagents for multi-bot collaboration
-        ]
+        allowed_tools = []
 
-        # Base MCP tools (available to all bots)
-        base_tools = [
+        # v0.4.0: Read tools from bot config structure
+        # Config format: {"builtin": [...], "campfire": [...], "skills": [...], "financial": [...]}
+        tools_dict = self.bot_config.tools or {}
+
+        # Add built-in SDK tools
+        builtin_tools = tools_dict.get('builtin', [
+            "WebSearch", "WebFetch", "Read", "Grep", "Glob", "Task"  # Default safe set
+        ])
+        allowed_tools.extend(builtin_tools)
+
+        # Add Campfire MCP tools (with mcp__campfire__ prefix)
+        campfire_tools = tools_dict.get('campfire', [])
+        allowed_tools.extend([f"mcp__campfire__{tool}" for tool in campfire_tools])
+
+        # Add Skills MCP tools (with mcp__skills__ prefix)
+        skills_tools = tools_dict.get('skills', [])
+        allowed_tools.extend([f"mcp__skills__{tool}" for tool in skills_tools])
+
+        # Add Financial MCP tools (with mcp__fin-report-agent__ prefix)
+        financial_tools = tools_dict.get('financial', [])
+        allowed_tools.extend([f"mcp__fin-report-agent__{tool}" for tool in financial_tools])
+
+        # Base Campfire platform tools (always available to all bots)
+        base_platform_tools = [
             "mcp__campfire__search_conversations",
             "mcp__campfire__get_user_context",
             "mcp__campfire__save_user_preference",
             "mcp__campfire__search_knowledge_base",
             "mcp__campfire__read_knowledge_document",
             "mcp__campfire__list_knowledge_documents",
-            "mcp__campfire__store_knowledge_document",
-            "mcp__campfire__process_image"  # Image analysis with vision API
+            "mcp__campfire__store_knowledge_document"
         ]
 
-        # Start with built-in tools + base MCP tools
-        allowed_tools = builtin_tools + base_tools
+        # Add base tools if not already included
+        for tool in base_platform_tools:
+            if tool not in allowed_tools:
+                allowed_tools.append(tool)
 
-        # Financial analyst gets financial tools
-        if self.bot_config.bot_id == "financial_analyst":
-            financial_tools = [
-                # Simple Tools
-                "mcp__fin-report-agent__read_excel_region",
-                "mcp__fin-report-agent__search_in_excel",
-                "mcp__fin-report-agent__get_excel_info",
-                "mcp__fin-report-agent__calculate",
-                "mcp__fin-report-agent__show_excel_visual",
-                # Navigation Tools
-                "mcp__fin-report-agent__find_account",
-                "mcp__fin-report-agent__get_financial_overview",
-                "mcp__fin-report-agent__get_account_context",
-                # Thinking Tools
-                "mcp__fin-report-agent__think_about_financial_data",
-                "mcp__fin-report-agent__think_about_analysis_completeness",
-                "mcp__fin-report-agent__think_about_assumptions",
-                # Memory Tools
-                "mcp__fin-report-agent__save_analysis_insight",
-                "mcp__fin-report-agent__get_session_context",
-                "mcp__fin-report-agent__write_memory_note",
-                "mcp__fin-report-agent__get_session_recovery_info",
-                # Complex Tools
-                "mcp__fin-report-agent__validate_account_structure",
-                # Skills MCP tools for document creation (complementary to financial analysis)
-                "mcp__skills__list_skills",
-                "mcp__skills__load_skill",
-                "mcp__skills__load_skill_file"
-            ]
-            allowed_tools.extend(financial_tools)
-            return allowed_tools
+        print(f"[Tools] ✅ Config-driven tools for {self.bot_config.bot_id}: {len(allowed_tools)} tools loaded")
+        print(f"[Tools] Built-in: {builtin_tools}")
+        print(f"[Tools] Campfire MCP: {campfire_tools}")
+        print(f"[Tools] Skills MCP: {skills_tools}")
+        print(f"[Tools] Financial MCP: {financial_tools}")
 
-        # Briefing assistant gets briefing tools
-        if self.bot_config.bot_id == "briefing_assistant":
-            briefing_tools = [
-                "mcp__campfire__generate_daily_briefing",
-                "mcp__campfire__search_briefings"
-            ]
-            allowed_tools.extend(briefing_tools)
-            return allowed_tools
-
-        # Personal assistant gets personal productivity tools
-        if self.bot_config.bot_id == "personal_assistant":
-            personal_tools = [
-                "mcp__campfire__manage_personal_tasks",
-                "mcp__campfire__set_reminder",
-                "mcp__campfire__save_personal_note",
-                "mcp__campfire__search_personal_notes",
-                # Skills MCP tools for progressive skill disclosure
-                "mcp__skills__list_skills",
-                "mcp__skills__load_skill",
-                "mcp__skills__load_skill_file"
-            ]
-            allowed_tools.extend(personal_tools)
-            return allowed_tools
-
-        # Operations assistant gets Supabase tools (read-only for now)
-        if self.bot_config.bot_id == "operations_assistant":
-            operations_tools = [
-                # Basic Supabase tools
-                "mcp__campfire__query_operations_data",
-                # "mcp__campfire__update_operations_data",  # Paused - requires service_role key
-                "mcp__campfire__get_operations_summary",
-                # Restaurant analytics RPC tools
-                "mcp__campfire__get_daily_revenue",
-                "mcp__campfire__get_revenue_by_zone",
-                "mcp__campfire__get_top_dishes",
-                "mcp__campfire__get_station_performance",
-                "mcp__campfire__get_hourly_revenue",
-                "mcp__campfire__get_table_turnover",
-                "mcp__campfire__get_return_analysis",
-                "mcp__campfire__get_order_type_distribution",
-                "mcp__campfire__get_revenue_trend",
-                "mcp__campfire__get_quick_stats"
-            ]
-            allowed_tools.extend(operations_tools)
-            return allowed_tools
-
-        # Menu engineer gets menu engineering Supabase tools
-        if self.bot_config.bot_id == "menu_engineer":
-            menu_engineering_tools = [
-                # Menu profitability analysis (Boston Matrix)
-                "mcp__campfire__get_menu_profitability",
-                "mcp__campfire__get_top_profitable_dishes",
-                "mcp__campfire__get_low_profit_dishes",
-                "mcp__campfire__get_cost_coverage_rate",
-                "mcp__campfire__get_dishes_missing_cost"
-            ]
-            allowed_tools.extend(menu_engineering_tools)
-            return allowed_tools
-
-        # Technical assistant or other bots: base tools only (built-in + campfire MCP)
         return allowed_tools
 
     def _map_bot_tools_to_subagent_format(self, bot_config: BotConfig) -> list[str]:
@@ -188,9 +116,15 @@ class CampfireAgent:
         Returns:
             List of tool names in Agent SDK format
         """
-        # Start with built-in SDK tools (always available)
+        # Start with SAFE built-in SDK tools only (v0.4.0 security fix)
+        # Subagents must also respect security restrictions: NO Write/Edit/Bash
         builtin_tools = [
-            "WebSearch", "WebFetch", "Read", "Write", "Edit", "Bash", "Grep", "Glob"
+            "WebSearch",      # Search the web for information
+            "WebFetch",       # Fetch web page content
+            "Read",           # Read file contents (read-only)
+            "Grep",           # Search within files (read-only)
+            "Glob",           # Find files by pattern (read-only)
+            # NOTE: Task tool NOT included for subagents to prevent infinite recursion
         ]
 
         # Base MCP tools (available to all bots)
@@ -538,62 +472,45 @@ Your logic:
     def _create_client(self):
         """Create Claude Agent SDK client with bot configuration"""
 
-        # Create Campfire MCP server from our tools
-        campfire_mcp_server = create_sdk_mcp_server(
-            name="campfire",
-            version="1.0.0",
-            tools=AGENT_TOOLS
-        )
+        # v0.4.0: Config-driven MCP server loading
+        # Read from bot config's mcp_servers array
+        import os
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        # MCP servers configuration
-        mcp_servers = {
-            "campfire": campfire_mcp_server
-        }
+        mcp_servers = {}
+        enabled_mcps = self.bot_config.mcp_servers or ['campfire']  # Default to campfire only
 
-        # Add Financial MCP for financial_analyst bot
-        if self.bot_config.bot_id == "financial_analyst":
-            # External Financial MCP (stdio transport via uv)
-            # Use uv run to ensure dependencies are available
-            mcp_servers["fin-report-agent"] = {
-                "transport": "stdio",
-                "command": "uv",
-                "args": [
-                    "run",
-                    "--directory",
-                    "/app/financial-mcp",
-                    "python",
-                    "run_mcp_server.py"
-                ]
-            }
+        # Always include Campfire MCP (our custom tools)
+        if 'campfire' in enabled_mcps:
+            mcp_servers["campfire"] = create_sdk_mcp_server(
+                name="campfire",
+                version="1.0.0",
+                tools=AGENT_TOOLS  # Our 31 custom tools
+            )
+            print(f"[MCP] ✅ Loaded Campfire MCP (31 custom tools)")
 
-        # Add Skills MCP for bots with progressive skill disclosure capability
-        if self.bot_config.capabilities.get('skills_progressive_disclosure'):
-            # Skills MCP for on-demand skill loading (reduces token usage by ~63%)
-            # Complementary to Financial MCP: Skills focuses on creation, Financial on analysis
-            import os
+        # Load Skills MCP if requested
+        if 'skills' in enabled_mcps:
             skills_dir = os.environ.get("SKILLS_DIR", "/app/.claude/skills")
-
-            # Use environment-aware path for Skills MCP (local vs Docker)
-            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             skills_mcp_dir = os.path.join(project_root, "skills-mcp")
 
             mcp_servers["skills"] = {
                 "transport": "stdio",
                 "command": "uv",
-                "args": [
-                    "run",
-                    "--directory",
-                    skills_mcp_dir,  # Environment-aware path (works local + Docker)
-                    "python",
-                    "server.py"
-                ],
-                "env": {
-                    "SKILLS_DIR": skills_dir
-                }
+                "args": ["run", "--directory", skills_mcp_dir, "python", "server.py"],
+                "env": {"SKILLS_DIR": skills_dir}
             }
+            print(f"[MCP] ✅ Loaded Skills MCP (progressive skill disclosure)")
+            print(f"[MCP]    Directory: {skills_mcp_dir}")
 
-            print(f"[Skills MCP] ✅ Loaded Skills MCP for {self.bot_config.bot_id} (progressive skill disclosure)")
-            print(f"[Skills MCP] Directory: {skills_mcp_dir}")
+        # Load Financial MCP if requested
+        if 'financial' in enabled_mcps:
+            mcp_servers["fin-report-agent"] = {
+                "transport": "stdio",
+                "command": "uv",
+                "args": ["run", "--directory", "/app/financial-mcp", "python", "run_mcp_server.py"]
+            }
+            print(f"[MCP] ✅ Loaded Financial MCP (17 Excel analysis tools)")
 
         # Get allowed tools based on bot type
         allowed_tools = self._get_allowed_tools_for_bot()

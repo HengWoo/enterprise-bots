@@ -26,8 +26,8 @@ RUN uv sync --frozen
 FROM python:3.11-slim
 
 LABEL maintainer="heng.woo@gmail.com"
-LABEL description="Campfire AI Bot with Built-in SDK Tools + Supabase + 8 Bots (FastAPI)"
-LABEL version="0.3.2"
+LABEL description="Campfire AI Bot with Multi-Bot Collaboration + Document Processing (PDF/DOCX/PPTX/Images) (FastAPI)"
+LABEL version="0.4.0"
 
 # Install uv in runtime (CRITICAL: needed for Financial MCP subprocess)
 RUN pip install --no-cache-dir uv
@@ -45,9 +45,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install sqlite3 for database access
+# Install sqlite3, pandoc, libreoffice, and poppler for document processing
 RUN apt-get update && apt-get install -y --no-install-recommends \
     sqlite3 \
+    pandoc \
+    libreoffice \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Claude Code CLI via npm (Full version with MCP support)

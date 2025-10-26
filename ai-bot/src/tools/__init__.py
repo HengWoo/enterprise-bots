@@ -17,8 +17,7 @@ from src.tools import (
     personal_decorators,
     operations_decorators,
     analytics_decorators,
-    menu_engineering_decorators,
-    image_decorators
+    menu_engineering_decorators
 )
 
 
@@ -37,7 +36,6 @@ def initialize_decorator_tools(campfire_tools_instance, supabase_tools_instance=
     operations_decorators.set_tools(campfire_tools_instance, supabase_tools_instance)
     analytics_decorators.set_tools(campfire_tools_instance, supabase_tools_instance)
     menu_engineering_decorators.set_tools(campfire_tools_instance, supabase_tools_instance)
-    image_decorators.set_tools(campfire_tools_instance, supabase_tools_instance)
 
 
 # Re-export all tool functions for backward compatibility
@@ -90,9 +88,7 @@ from src.tools.menu_engineering_decorators import (
     get_dishes_missing_cost_tool
 )
 
-from src.tools.image_decorators import (
-    process_image_tool
-)
+# Image and document processing removed - use Skills MCP or Read tool
 
 __all__ = [
     # Core classes
@@ -143,8 +139,5 @@ __all__ = [
     'get_top_profitable_dishes_tool',
     'get_low_profit_dishes_tool',
     'get_cost_coverage_rate_tool',
-    'get_dishes_missing_cost_tool',
-
-    # Image tools
-    'process_image_tool'
+    'get_dishes_missing_cost_tool'
 ]

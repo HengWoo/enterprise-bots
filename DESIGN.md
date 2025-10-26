@@ -2,17 +2,18 @@
 
 **Project:** AI-Powered Group Chat Intelligence
 **Platform:** Campfire (37signals ONCE)
-**Current Version:** v0.3.3
-**Production Status:** ✅ All 8 bots active with Haiku 4.5
+**Current Version:** v0.4.0 (Ready for Deployment)
+**Production Status:** v0.3.3.1 (All 8 bots active with Haiku 4.5)
 
 ---
 
 ## 🔥 Current Status
 
-**Production:** v0.3.3 with claude-haiku-4-5-20251001 model
-**Architecture:** FastAPI + Stateful Sessions + Progress Milestones + Knowledge Base + Skills MCP + Supabase + Modular Tools
+**Production:** v0.3.3.1 with claude-haiku-4-5-20251001 model
+**Ready for Deployment:** v0.4.0 with Multi-Bot Collaboration + Security Fixes
+**Architecture:** FastAPI + Stateful Sessions + Multi-Bot Collaboration + Progress Milestones + Knowledge Base + Skills MCP + Supabase + Modular Tools
 **Bots:** 8 specialized assistants (Financial, Technical, Personal, Briefing, Default, Operations, CC Tutor, Menu Engineering)
-**Key Feature:** Agent Tools Refactoring - 46% code reduction with 7 modular decorator files
+**Key Features:** Multi-bot collaboration via Task tool + Two-layer security protection (all bots read-only)
 
 ---
 

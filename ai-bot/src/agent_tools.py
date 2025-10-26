@@ -9,9 +9,12 @@ NOTE: This file has been refactored in v0.3.3 to split 2,418 lines into modular 
 - src/tools/operations_decorators.py (3 tools)
 - src/tools/analytics_decorators.py (10 tools)
 - src/tools/menu_engineering_decorators.py (5 tools)
-- src/tools/image_decorators.py (1 tool)
 
-Total: 32 tools across 7 modular files
+Total: 31 tools across 6 modular files
+
+v0.4.0 Changes:
+- Removed process_image_tool (use Read tool - Claude Vision API)
+- Removed process_docx_tool (use Skills MCP - comprehensive DOCX capabilities)
 """
 
 from src.tools.campfire_tools import CampfireTools
@@ -52,7 +55,7 @@ def initialize_tools(campfire_tools: CampfireTools):
 
     # Initialize all decorator modules
     initialize_decorator_tools(_campfire_tools, _supabase_tools)
-    print("[Tools] ✅ All 32 tool decorators initialized across 7 modules")
+    print("[Tools] ✅ All 31 tool decorators initialized across 6 modules")
 
 
 # Re-export all tool functions from decorator modules
@@ -105,10 +108,6 @@ from src.tools.menu_engineering_decorators import (
     get_dishes_missing_cost_tool
 )
 
-from src.tools.image_decorators import (
-    process_image_tool
-)
-
 # Aggregate all tools into AGENT_TOOLS list (for SDK MCP server creation)
 AGENT_TOOLS = [
     # Campfire tools (7)
@@ -147,9 +146,7 @@ AGENT_TOOLS = [
     get_top_profitable_dishes_tool,
     get_low_profit_dishes_tool,
     get_cost_coverage_rate_tool,
-    get_dishes_missing_cost_tool,
-    # Image tools (1)
-    process_image_tool
+    get_dishes_missing_cost_tool
 ]
 
 # Export all for backward compatibility
@@ -192,7 +189,5 @@ __all__ = [
     'get_top_profitable_dishes_tool',
     'get_low_profit_dishes_tool',
     'get_cost_coverage_rate_tool',
-    'get_dishes_missing_cost_tool',
-    # Image tools (1)
-    'process_image_tool'
+    'get_dishes_missing_cost_tool'
 ]

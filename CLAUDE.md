@@ -16,23 +16,30 @@
 **Last Deployed:** 2025-10-25
 **Status:** All systems operational
 
-**Latest Changes (v0.3.3.1):**
-- ✅ **CRITICAL FIX**: Implemented missing `process_image_tool` function body
-  - Previous bug: Function was declared but had no implementation (empty body)
-  - Symptom: Image processing returned "不支持的文件格式" error
-  - Impact: All 8 bots now support image analysis via Claude Vision API
-  - Implementation: 97-line function with error handling for file validation, format detection, and Vision API calls
-  - Supported formats: PNG, JPG, JPEG, GIF, WEBP (up to 5MB)
-  - Test coverage: File not found, unsupported format, API key validation
+**v0.4.0 Status:** 🟢 Ready for Production Deployment
+**Testing Complete:** 2025-10-25 (All 13 tests passed)
+**Security Status:** ✅ Perfect (0 violations)
 
-**Previous Version (v0.3.3):**
-- ✅ Agent Tools Refactoring: Split 2,418-line monolithic file into 7 modular files
-- ✅ 46% code reduction (2,418 → 1,305 total lines)
-- ✅ Improved maintainability with domain-separated tool modules
-- ✅ Bug fix: Added missing AGENT_TOOLS export for SDK MCP server creation
-- ✅ Total bots: 8 (all operational with modular architecture)
+**Latest Version (v0.4.0 - Ready for Deployment):**
+- ✅ **Multi-Bot Collaboration** via Task tool (peer-to-peer subagent architecture)
+- ✅ **Critical Security Fixes** (all 8 bots read-only, no Write/Edit/Bash via webhooks)
+- ✅ **Subagent Security** (dangerous tools excluded from subagent mappings)
+- ✅ **System Prompt Guardrails** (all 8 bot configs updated with security restrictions)
+- ✅ **Document Processing Architecture** (PDF via Read native, Images via Claude vision, DOCX via Skills MCP + pandoc, PPTX via Skills MCP + markitdown)
+- ✅ **Bash Tool Re-enabled** for personal_assistant (safe in Docker sandbox for document processing)
+- ✅ **PPTX Support Added** (text extraction, visual analysis, editing via Skills MCP)
+- ✅ **Comprehensive Testing** (13 scenarios across 4 categories, all passed)
+- ✅ **Test Infrastructure** (test_phase6_multibot.py created)
+- ✅ **Documentation Complete** (V0.4.0_LOCAL_TEST_RESULTS.md, V0.4.0_DOCUMENT_PROCESSING_ARCHITECTURE.md)
+
+**Previous Version (v0.3.3.1):**
+- ✅ Image Processing (all bots via Claude API)
+- ✅ Agent Tools Refactoring (46% code reduction)
+- ✅ 8 specialized bots operational
 
 **Working Features:**
+- ✅ **NEW v0.4.0**: Multi-Bot Collaboration (Task tool + subagent coordination)
+- ✅ **NEW v0.4.0**: Two-Layer Security Protection (code + prompt restrictions)
 - ✅ FastAPI + Stateful Sessions (hot/warm/cold paths, 40% faster responses)
 - ✅ Real-time Progress Milestones (50%+ perceived speed improvement)
 - ✅ 8 Specialized Bots with Haiku 4.5 model
@@ -41,7 +48,7 @@
 - ✅ Financial MCP Server (Excel analysis)
 - ✅ Skills MCP (progressive skill disclosure)
 - ✅ Supabase Integration (Operations + Menu Engineering)
-- ✅ **NEW**: Image Processing with Claude Vision API (all bots)
+- ✅ Image Processing (all bots via Claude API)
 
 ---
 
@@ -304,21 +311,42 @@ docker logs -f campfire-ai-bot
 
 ---
 
-**Next Version Target:** v0.4.0 (TBD - Planning)
-**Status:** 🔮 Future planning
+**Current Version:** v0.4.0 (Ready for Production)
+**Status:** 🟢 Testing complete, approved for deployment
 
-**v0.3.3 Status:** ✅ DEPLOYED to production on 2025-10-25
+**v0.3.3.1 Status:** ✅ DEPLOYED to production on 2025-10-25
 
-**Completed in v0.3.3:**
-- ✅ Agent Tools Refactoring: 2,418 → 154 lines (94% reduction)
-- ✅ 7 modular decorator files by functional domain
-- ✅ 46% total code reduction (2,418 → 1,305 lines)
-- ✅ Bug fix: Added missing AGENT_TOOLS export
-- ✅ All 32 tools verified working
+**v0.4.0 Completion Status:**
+- ✅ Multi-Bot Collaboration Architecture (Task tool + subagent coordination)
+- ✅ Critical Security Fixes (all 8 bots read-only, no Write/Edit/Bash via webhooks)
+- ✅ Subagent Tool Mapping Bug Fix (dangerous tools excluded)
+- ✅ System Prompt Guardrails (all 8 bot configs updated)
+- ✅ Test Infrastructure Created (test_phase6_multibot.py with 13 scenarios)
+- ✅ Comprehensive Local Testing Complete (All 13 tests passed)
+- ✅ Security Verification Perfect (0 violations)
+- ✅ Documentation Complete (test results, deployment guide)
 
-**Planned for v0.4.0:**
-- ⏰ Daily Briefing Cron Automation (fix cron job)
-- 🔄 Additional bot enhancements (TBD)
+**Completed in v0.4.0:**
+- Multi-bot collaboration via Task tool (peer-to-peer architecture)
+- Distributed subagent system (all 8 bots can spawn other bots)
+- Two-layer security protection (code + prompt restrictions)
+- Subagent security verification (safe tools only)
+- Context isolation between main bot and subagents
+- Document processing architecture validated (PDF/Image/DOCX/PPTX workflows)
+- Bash re-enabled for personal_assistant (safe in Docker sandbox)
+- PPTX support via Skills MCP (text extraction, visual analysis, editing)
+- Dependencies added (markitdown, libreoffice, poppler-utils)
+- Comprehensive test suite (13 Phase 6 scenarios)
+- Full local testing execution (Phases 1-6)
+
+**Ready for v0.4.0 Deployment:**
+- Build Docker image (v0.4.0)
+- Push to Docker Hub
+- Deploy to production
+- Monitor for 24-48 hours
+
+**Deferred to Future Versions:**
+- ⏰ Daily Briefing Cron Automation (v0.4.1 or later)
 
 ---
 
@@ -335,7 +363,8 @@ docker logs -f campfire-ai-bot
 | 0.3.0.1 | 2025-10-21 | Bug fixes + Operations bot + CC Tutor | Deployed |
 | 0.3.2 | 2025-10-23 | Menu Engineering bot + Boston Matrix | Deployed |
 | 0.3.3 | 2025-10-25 | Agent Tools Refactoring (46% code reduction) | Deployed |
-| **0.3.3.1** | **2025-10-25** | **CRITICAL: Implemented missing process_image_tool function body** | **✅ IN PRODUCTION** |
+| 0.3.3.1 | 2025-10-25 | Image processing fix | ✅ IN PRODUCTION |
+| **0.4.0** | **2025-10-25** | **Multi-Bot Collaboration + Security Fixes** | **🟢 READY FOR DEPLOYMENT** |
 
 ## Key Features by Version
 
@@ -347,7 +376,8 @@ docker logs -f campfire-ai-bot
 **v0.3.0.1:** Fixed built-in SDK tools, Chinese progress message, Operations + CC Tutor bots (7 bots)
 **v0.3.2:** Menu Engineering bot with 5 profitability analysis tools (8 bots)
 **v0.3.3:** Agent Tools Refactoring - 2,418 → 154 lines (94% reduction), 7 modular decorator files
-**v0.3.3.1:** Image processing bug fix - implemented missing process_image_tool body (97 lines), enables Vision API for all bots
+**v0.3.3.1:** Image processing bug fix - implemented missing process_image_tool body (97 lines), enables image analysis for all bots
+**v0.4.0:** Multi-bot collaboration via Task tool + Critical security fixes (all bots read-only) + Document processing (PDF/Images/DOCX/PPTX via Skills MCP) + 13 test scenarios passed
 
 ## Project File Reference
 

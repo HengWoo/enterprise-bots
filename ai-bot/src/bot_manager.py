@@ -39,7 +39,16 @@ class BotConfig:
         self.system_prompt = config_data.get('system_prompt', '')
 
         # Tools and capabilities
+        # v0.4.0: New structure with mcp_servers and tools dict
+        self.mcp_servers = config_data.get('mcp_servers', ['campfire'])  # Default to campfire MCP
+        self.tools = config_data.get('tools', {})  # Dict: {builtin: [...], campfire: [...], skills: [...]}
+
+        # Backwards compatibility: if old tools_enabled exists, convert it
         self.tools_enabled = config_data.get('tools_enabled', [])
+        if self.tools_enabled and not self.tools:
+            # Legacy format - all tools assumed to be in campfire MCP
+            self.tools = {'campfire': self.tools_enabled}
+
         self.capabilities = config_data.get('capabilities', {})
 
         # Language settings
@@ -63,7 +72,9 @@ class BotConfig:
             'thinking_enabled': self.thinking_enabled,
             'thinking_budget': self.thinking_budget,
             'system_prompt': self.system_prompt,
-            'tools_enabled': self.tools_enabled,
+            'mcp_servers': self.mcp_servers,
+            'tools': self.tools,
+            'tools_enabled': self.tools_enabled,  # Legacy, kept for compatibility
             'capabilities': self.capabilities,
             'languages': self.languages,
             'default_language': self.default_language,

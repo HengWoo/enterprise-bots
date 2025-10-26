@@ -1,6 +1,6 @@
 [project]
 name = "campfire-ai-bot"
-version = "0.3.0.1"
+version = "0.4.0"
 description = "AI-powered bot for Campfire chat using Claude Agent SDK with FastAPI"
 requires-python = ">=3.10"
 dependencies = [
@@ -11,6 +11,7 @@ dependencies = [
     "anthropic>=0.39.0",
     "python-dotenv>=1.0.0",
     "supabase>=2.0.0",  # For Operations Assistant bot
+    "markitdown[pptx]>=0.0.1",  # For PowerPoint text extraction
 ]
 
 [project.optional-dependencies]

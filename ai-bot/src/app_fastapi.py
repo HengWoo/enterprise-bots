@@ -32,11 +32,13 @@ v0.3.3 Changes:
 - Improved maintainability and navigation
 - Zero behavior changes (pure structural refactoring)
 
-v0.3.3.1 Changes:
-- CRITICAL FIX: Implemented missing process_image_tool function body (97 lines)
-- Previous bug: Function was declared but had empty implementation
-- Image analysis now works via Claude Vision API for all 8 bots
-- Supported formats: PNG, JPG, JPEG, GIF, WEBP (up to 5MB)
+v0.4.0 Changes:
+- Document Processing Architecture: PDF (native Read), Images (Claude API vision), DOCX (Skills MCP + pandoc), PPTX (Skills MCP + markitdown)
+- PPTX Support: Text extraction, visual analysis, editing via Skills MCP
+- Dependencies: markitdown[pptx], libreoffice, poppler-utils
+- Re-enabled Bash tool for personal_assistant (Docker sandboxed, safe for document processing)
+- Updated personal_assistant system prompt with DOCX/PPTX workflows
+- Set pptx_support: true in capabilities
 - Comprehensive error handling: file validation, format detection, API calls
 
 v0.4.0 Changes (Multi-Bot Collaboration):
@@ -158,7 +160,7 @@ async def lifespan(app: FastAPI):
     config = get_config()
 
     print("=" * 60)
-    print("🚀 Campfire AI Bot v0.3.3.1 - Image Processing Fix")
+    print("🚀 Campfire AI Bot v0.4.0 - Multi-format Document Processing (PDF/DOCX/PPTX/Images)")
     print("=" * 60)
 
     # Startup: Initialize application state
@@ -559,7 +561,7 @@ if __name__ == "__main__":
     port = int(os.getenv('FASTAPI_PORT', 8000))
     host = os.getenv('FASTAPI_HOST', '0.0.0.0')
 
-    print(f"Starting Campfire AI Bot v0.3.3.1 on {host}:{port}")
+    print(f"Starting Campfire AI Bot v0.4.0 on {host}:{port}")
     print(f"Database: {config['CAMPFIRE_DB_PATH']}")
     print(f"Campfire URL: {config['CAMPFIRE_URL']}")
 
