@@ -27,7 +27,7 @@ FROM python:3.11-slim
 
 LABEL maintainer="heng.woo@gmail.com"
 LABEL description="Campfire AI Bot with Multi-Bot Collaboration + Document Processing (PDF/DOCX/PPTX/Images) (FastAPI)"
-LABEL version="0.4.0"
+LABEL version="0.4.0.1"
 
 # Install uv in runtime (CRITICAL: needed for Financial MCP subprocess)
 RUN pip install --no-cache-dir uv

@@ -1,5 +1,5 @@
 """
-Campfire AI Bot - FastAPI webhook server (v0.4.0)
+Campfire AI Bot - FastAPI webhook server (v0.4.0.1)
 Receives Campfire webhooks and responds using Claude Agent SDK with stateful session management
 
 Key Improvements over Flask (v1.0.14):
@@ -48,6 +48,12 @@ v0.4.0 Changes (Multi-Bot Collaboration):
 - 3 new helper methods: _map_bot_tools_to_subagent_format(), _get_subagents_for_bot(), _get_subagent_guidance()
 - Updated CampfireAgent.__init__ to accept bot_manager parameter
 - Modified _create_client() to add "agents" parameter to ClaudeAgentOptions
+
+v0.4.0.1 Changes (HTML Formatting Fix):
+- Restored comprehensive HTML formatting instructions to personal_assistant.json
+- Added blog-style layout guidelines (div containers, heading hierarchy, Chinese text spacing)
+- Fixes plain text response issue - bot now generates styled HTML with proper visual hierarchy
+- No code changes - configuration-only update
 - Parallel subagent execution for faster multi-domain analyses
 - Context isolation: Each subagent runs independently without cluttering main conversation
 - Safety: Recursion prevention, clear delegation rules, cost-aware guidance
