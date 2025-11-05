@@ -26,8 +26,8 @@ RUN uv sync --frozen
 FROM python:3.11-slim
 
 LABEL maintainer="heng.woo@gmail.com"
-LABEL description="Campfire AI Bot with Multi-Bot Collaboration + Document Processing (PDF/DOCX/PPTX/Images) (FastAPI)"
-LABEL version="0.4.0.1"
+LABEL description="Campfire AI Bot v0.5.0 - Verification + Code Generation + Smart HTML Detection (FastAPI)"
+LABEL version="0.5.0"
 
 # Install uv in runtime (CRITICAL: needed for Financial MCP subprocess)
 RUN pip install --no-cache-dir uv
@@ -45,13 +45,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install sqlite3, pandoc, libreoffice, and poppler for document processing
+# Install document processing tools
+# LibreOffice is optional - build continues even if it fails
 RUN apt-get update && apt-get install -y --no-install-recommends \
     sqlite3 \
     pandoc \
-    libreoffice \
-    poppler-utils \
-    && rm -rf /var/lib/apt/lists/*
+    poppler-utils && \
+    (apt-get install -y --no-install-recommends libreoffice-writer-nogui libreoffice-calc-nogui || \
+     echo "⚠️  LibreOffice installation failed - PPTX features limited to text extraction") && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Claude Code CLI via npm (Full version with MCP support)
 # This is needed by claude-agent-sdk for SubprocessCLITransport
@@ -70,6 +72,7 @@ COPY --from=builder /app/.venv /app/.venv
 # Copy application code
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser bots/ ./bots/
+COPY --chown=appuser:appuser prompts/ ./prompts/
 COPY --chown=appuser:appuser scripts/ ./scripts/
 COPY --chown=appuser:appuser .claude/ ./.claude/
 

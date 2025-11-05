@@ -1,6 +1,8 @@
 """
 Campfire Agent - Claude Agent SDK Wrapper
 Wraps the Claude Agent SDK to provide bot functionality for Campfire
+
+v0.4.1: File-based prompts with PromptLoader integration
 """
 
 from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, create_sdk_mcp_server, AgentDefinition
@@ -8,6 +10,8 @@ from src.bot_manager import BotConfig, BotManager
 from src.agent_tools import AGENT_TOOLS, initialize_tools
 from src.tools.campfire_tools import CampfireTools
 from src.progress_classifier import ProgressClassifier
+from src.exceptions import SessionRecoveryError
+from src.prompt_loader import PromptLoader  # v0.4.1: File-based prompts
 from typing import Dict, Optional, Callable
 
 
@@ -39,6 +43,10 @@ class CampfireAgent:
         self.client: Optional[ClaudeSDKClient] = None
         self.resume_session = resume_session
 
+        # v0.4.1: Initialize PromptLoader for file-based prompts
+        self.prompt_loader = PromptLoader(prompts_dir="prompts")
+        self._file_based_prompt: Optional[str] = None  # Cache loaded prompt
+
         # Initialize tools with campfire_tools instance
         initialize_tools(campfire_tools)
 
@@ -47,6 +55,36 @@ class CampfireAgent:
 
         # Client needs to be connected before use
         self._connected = False
+
+    def _get_system_prompt(self, context: Dict[str, str]) -> str:
+        """
+        Get system prompt - either from file-based prompt (v0.4.1) or JSON config.
+
+        Args:
+            context: Template variables (current_date, user_name, room_name, etc.)
+
+        Returns:
+            System prompt string
+        """
+        # Check if bot has file-based prompt configuration
+        system_prompt_file = getattr(self.bot_config, 'system_prompt_file', None)
+
+        if system_prompt_file and self.prompt_loader.has_file_based_prompt(self.bot_config.bot_id):
+            # v0.4.1: Load from file with template substitution
+            try:
+                prompt = self.prompt_loader.load_bot_prompt(
+                    bot_id=self.bot_config.bot_id,
+                    context=context
+                )
+                print(f"[Prompts] ✅ Loaded file-based prompt: prompts/bots/{self.bot_config.bot_id}.md")
+                print(f"[Prompts] Template variables: {list(context.keys())}")
+                return prompt
+            except FileNotFoundError:
+                print(f"[Prompts] ⚠️  File not found, falling back to JSON: {self.bot_config.bot_id}.md")
+
+        # Fallback to JSON-based system_prompt
+        print(f"[Prompts] Using JSON system_prompt for: {self.bot_config.bot_id}")
+        return self.bot_config.system_prompt
 
     def _get_allowed_tools_for_bot(self) -> list:
         """
@@ -66,7 +104,7 @@ class CampfireAgent:
 
         # Add built-in SDK tools
         builtin_tools = tools_dict.get('builtin', [
-            "WebSearch", "WebFetch", "Read", "Grep", "Glob", "Task"  # Default safe set
+            "WebSearch", "WebFetch", "Read", "Grep", "Glob", "Task", "Skill"  # Default safe set + native skills (v0.5.0)
         ])
         allowed_tools.extend(builtin_tools)
 
@@ -274,8 +312,8 @@ class CampfireAgent:
                     tools=tools,
                     model='inherit'
                 )
-            elif bot_id == "claude_code_tutor":
-                subagents['claude_code_tutor'] = AgentDefinition(
+            elif bot_id == "cc_tutor":
+                subagents['cc_tutor'] = AgentDefinition(
                     description='Claude Code education specialist with comprehensive tutorials, troubleshooting guides, tool usage documentation, and MCP/Agent SDK best practices',
                     prompt=bot_config.system_prompt,
                     tools=tools,
@@ -360,7 +398,7 @@ You have the ability to delegate specialized tasks to other expert bots as subag
   - Need to reference historical summaries
   - Task requires briefing generation
 
-#### 7. claude_code_tutor
+#### 7. cc_tutor
 - **Expertise**: Claude Code usage teaching, troubleshooting, best practices
 - **Tools**: Knowledge base access (Claude Code documentation), base MCP, WebSearch
 - **When to invoke**:
@@ -451,8 +489,8 @@ User asks: "Claude Code 的 Read tool 怎么用？"
 
 Your logic:
 1. This is Claude Code specific knowledge
-2. claude_code_tutor has specialized documentation access
-3. Spawn claude_code_tutor subagent
+2. cc_tutor has specialized documentation access
+3. Spawn cc_tutor subagent
 4. Tutor returns detailed explanation with examples
 5. I format response appropriately for user
 ```
@@ -489,19 +527,23 @@ Your logic:
             )
             print(f"[MCP] ✅ Loaded Campfire MCP (31 custom tools)")
 
-        # Load Skills MCP if requested
-        if 'skills' in enabled_mcps:
-            skills_dir = os.environ.get("SKILLS_DIR", "/app/.claude/skills")
-            skills_mcp_dir = os.path.join(project_root, "skills-mcp")
-
-            mcp_servers["skills"] = {
-                "transport": "stdio",
-                "command": "uv",
-                "args": ["run", "--directory", skills_mcp_dir, "python", "server.py"],
-                "env": {"SKILLS_DIR": skills_dir}
-            }
-            print(f"[MCP] ✅ Loaded Skills MCP (progressive skill disclosure)")
-            print(f"[MCP]    Directory: {skills_mcp_dir}")
+        # v0.5.0: Skills MCP deprecated - using native Agent SDK skills instead
+        # Native skills enabled via setting_sources=["user", "project"] parameter
+        # Skills auto-discovered from .claude/skills/ directory (Anthropic standard)
+        #
+        # Legacy Skills MCP code preserved for 2-4 week transition period (can be removed in v0.5.1)
+        # if 'skills' in enabled_mcps:
+        #     skills_dir = os.environ.get("SKILLS_DIR", "/app/.claude/skills")
+        #     skills_mcp_dir = os.path.join(project_root, "skills-mcp")
+        #
+        #     mcp_servers["skills"] = {
+        #         "transport": "stdio",
+        #         "command": "uv",
+        #         "args": ["run", "--directory", skills_mcp_dir, "python", "server.py"],
+        #         "env": {"SKILLS_DIR": skills_dir}
+        #     }
+        #     print(f"[MCP] ✅ Loaded Skills MCP (progressive skill disclosure)")
+        #     print(f"[MCP]    Directory: {skills_mcp_dir}")
 
         # Load Financial MCP if requested
         if 'financial' in enabled_mcps:
@@ -530,6 +572,17 @@ Your logic:
         current_date = datetime.now().strftime('%Y-%m-%d')
         current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+        # v0.4.1: Prepare template context for file-based prompts
+        prompt_context = {
+            'current_date': current_date,
+            'current_datetime': current_datetime,
+            'user_name': 'User',  # Will be replaced with actual user name in process_message
+            'room_name': 'Room'   # Will be replaced with actual room name in process_message
+        }
+
+        # Load system prompt (file-based or JSON-based)
+        base_system_prompt = self._get_system_prompt(prompt_context)
+
         enhanced_system_prompt = f"""**IMPORTANT: Current Date and Time**
 Today's date: {current_date}
 Current date/time: {current_datetime}
@@ -539,7 +592,7 @@ When users ask about "today", "this week", "this month", use the date above.
 
 ---
 
-{self.bot_config.system_prompt}
+{base_system_prompt}
 
 {self._get_subagent_guidance()}"""
 
@@ -552,12 +605,22 @@ When users ask about "today", "this week", "this month", use the date above.
             "permission_mode": 'default',
             "cwd": cwd_path,  # Set working directory for file operations
             "max_turns": 30,  # Allow 30 turns for complex multi-step analyses with multiple tool calls
-            "agents": self._get_subagents_for_bot()  # v0.4.0: Enable subagent collaboration
+            "agents": self._get_subagents_for_bot(),  # v0.4.0: Enable subagent collaboration
+            "setting_sources": ["user", "project"],  # v0.5.0: Enable native Agent SDK skills discovery
+            "env": {  # v0.4.1: Pass env vars to subprocess (fixes custom API endpoint for local dev)
+                'ANTHROPIC_BASE_URL': os.getenv('ANTHROPIC_BASE_URL', ''),
+                'ANTHROPIC_API_KEY': os.getenv('ANTHROPIC_API_KEY', ''),
+                'ANTHROPIC_BASE_URL_FALLBACK': os.getenv('ANTHROPIC_BASE_URL_FALLBACK', ''),
+                'ANTHROPIC_API_KEY_FALLBACK': os.getenv('ANTHROPIC_API_KEY_FALLBACK', '')
+            }
         }
 
         # Debug: log skills configuration
         print(f"[Skills] Working directory: {cwd_path}")
-        print(f"[Skills] Skills MCP: {'ENABLED' if 'skills' in mcp_servers else 'DISABLED'}")
+        print(f"[Skills] Native SDK skills: {'ENABLED' if 'setting_sources' in options_dict else 'DISABLED'}")
+        if 'setting_sources' in options_dict:
+            print(f"[Skills] Skills directory: {os.path.join(cwd_path, '.claude/skills')}")
+            print(f"[Skills] Discovery sources: {options_dict['setting_sources']}")
 
         # Add resume parameter if session exists (enables multi-turn conversation)
         if self.resume_session:
@@ -619,6 +682,15 @@ When users ask about "today", "this week", "this month", use the date above.
             )
 
         except Exception as primary_error:
+            error_msg = str(primary_error)
+
+            # Check for stale session error first (before API fallback)
+            if "No conversation found with session ID" in error_msg:
+                print(f"[Session Recovery] ⚠️  Detected stale session error")
+                print(f"[Session Recovery]    Error: {error_msg[:200]}")
+                # Raise special exception to trigger session cleanup in app_fastapi.py
+                raise SessionRecoveryError(f"Stale session detected: {error_msg}") from primary_error
+
             print(f"[API Fallback] ⚠️ Primary API failed: {type(primary_error).__name__}: {str(primary_error)[:200]}")
 
             # Check if fallback is configured
@@ -733,16 +805,8 @@ When users ask about "today", "this week", "this month", use the date above.
                             print(f"[Agent Tool Call] 🔧 Tool: {tool_name}")
                             print(f"[Agent Tool Call]    Input: {tool_input}")
 
-                            # Post tool milestone if it's a major tool
-                            if on_milestone and milestone_count < MAX_MILESTONES:
-                                milestone_msg = ProgressClassifier.get_tool_milestone(tool_name)
-                                if milestone_msg:
-                                    try:
-                                        await on_milestone(milestone_msg)
-                                        milestone_count += 1
-                                        print(f"[Milestone] Posted tool milestone: {milestone_msg}")
-                                    except Exception as e:
-                                        print(f"[Warning] Error in on_milestone callback: {e}")
+                            # Milestone posting disabled - only show initial "working" message
+                            pass
 
                         # TextBlock contains the actual response text
                         elif block_type == 'TextBlock':
@@ -759,17 +823,8 @@ When users ask about "today", "this week", "this month", use the date above.
 
                                 response_text += text
 
-                                # Check if this is a milestone message (smart filtering)
-                                if on_milestone and milestone_count < MAX_MILESTONES:
-                                    if ProgressClassifier.is_milestone(text, last_tool_name):
-                                        # Extract meaningful preview for milestone
-                                        preview = ProgressClassifier.truncate_for_preview(text, max_length=150)
-                                        try:
-                                            await on_milestone(f"💭 {preview}")
-                                            milestone_count += 1
-                                            print(f"[Milestone] Posted text milestone: {preview[:50]}...")
-                                        except Exception as e:
-                                            print(f"[Warning] Error in on_milestone callback: {e}")
+                                # Milestone posting disabled - only show initial "working" message
+                                pass
 
                                 # Call on_text_block callback if provided (for legacy compatibility)
                                 if on_text_block and text.strip():

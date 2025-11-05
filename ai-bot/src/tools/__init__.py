@@ -88,6 +88,11 @@ from src.tools.menu_engineering_decorators import (
     get_dishes_missing_cost_tool
 )
 
+from src.tools.file_saving_tools import (
+    save_html_presentation_tool,
+    save_file_tool  # v0.5.2: Universal file saving
+)
+
 # Image and document processing removed - use Skills MCP or Read tool
 
 __all__ = [
@@ -139,5 +144,8 @@ __all__ = [
     'get_top_profitable_dishes_tool',
     'get_low_profit_dishes_tool',
     'get_cost_coverage_rate_tool',
-    'get_dishes_missing_cost_tool'
+    'get_dishes_missing_cost_tool',
+
+    # File saving tools (v0.4.1)
+    'save_html_presentation_tool'
 ]

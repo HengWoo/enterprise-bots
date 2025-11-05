@@ -49,6 +49,59 @@ async def query_operations_data_tool(args):
             }]
         }
 
+    try:
+        # Extract parameters
+        table = args.get('table', '')
+        filters = args.get('filters', {})
+        columns = args.get('columns', '*')
+        limit = args.get('limit', 100)
+        order_by = args.get('order_by')
+
+        # Call underlying implementation
+        result = _supabase_tools.query_operations_data(
+            table=table,
+            filters=filters,
+            columns=columns,
+            limit=limit,
+            order_by=order_by
+        )
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            records = result['data']
+            response_text = f"**{table}** 表查询结果 ({len(records)} 条记录):\n\n"
+
+            # Format records as a table
+            for i, record in enumerate(records[:10], 1):  # Show first 10
+                response_text += f"{i}. "
+                for key, value in record.items():
+                    response_text += f"{key}: {value}, "
+                response_text = response_text.rstrip(', ') + "\n"
+
+            if len(records) > 10:
+                response_text += f"\n...还有 {len(records) - 10} 条记录\n"
+
+        elif result.get('success') and not result.get('data'):
+            response_text = f"未找到符合条件的记录（表：{table}）"
+
+        else:
+            response_text = f"查询失败：{result.get('error', '未知错误')}"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询运营数据失败：{str(e)}"
+            }]
+        }
+
 
 @tool(
     name="update_operations_data",
@@ -78,6 +131,51 @@ async def update_operations_data_tool(args):
             }]
         }
 
+    try:
+        # Extract parameters
+        table = args.get('table', '')
+        record_id = args.get('record_id')
+        data = args.get('data', {})
+        id_column = args.get('id_column', 'id')
+
+        # Call underlying implementation
+        result = _supabase_tools.update_operations_data(
+            table=table,
+            record_id=record_id,
+            data=data,
+            id_column=id_column
+        )
+
+        # Format response
+        if result.get('success'):
+            response_text = f"✅ 更新成功\n\n"
+            response_text += f"表: {table}\n"
+            response_text += f"记录ID: {record_id}\n"
+            response_text += f"更新字段: {', '.join(data.keys())}\n"
+
+            # Show updated record if available
+            if result.get('data'):
+                response_text += f"\n**更新后的记录:**\n"
+                for key, value in result['data'].items():
+                    response_text += f"- {key}: {value}\n"
+        else:
+            response_text = f"更新失败：{result.get('error', '未知错误')}"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"更新运营数据失败：{str(e)}"
+            }]
+        }
+
 
 @tool(
     name="get_operations_summary",
@@ -104,6 +202,59 @@ async def get_operations_summary_tool(args):
             "content": [{
                 "type": "text",
                 "text": "⚠️ **Supabase tools not available**\n\nSupabase credentials have not been configured."
+            }]
+        }
+
+    try:
+        # Extract parameters
+        date_range = args.get('date_range')
+        metrics = args.get('metrics')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_operations_summary(
+            date_range=date_range,
+            metrics=metrics
+        )
+
+        # Format response
+        if result.get('success'):
+            response_text = f"📊 **运营数据摘要**\n\n"
+
+            # Date range
+            if date_range:
+                response_text += f"时间范围: {date_range.get('start_date', '')} 至 {date_range.get('end_date', '')}\n\n"
+
+            # Summary data
+            summary = result.get('summary', {})
+            if summary:
+                for metric_name, metric_data in summary.items():
+                    response_text += f"**{metric_name}:**\n"
+
+                    if isinstance(metric_data, dict):
+                        for key, value in metric_data.items():
+                            response_text += f"- {key}: {value}\n"
+                    else:
+                        response_text += f"- {metric_data}\n"
+
+                    response_text += "\n"
+            else:
+                response_text += "暂无运营数据。\n"
+
+        else:
+            response_text = f"生成摘要失败：{result.get('error', '未知错误')}"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"生成运营摘要失败：{str(e)}"
             }]
         }
 

@@ -1,0 +1,14 @@
+{
+  "reminders": [
+    {
+      "id": 1,
+      "text": "\ud83c\udf89 Test reminder - automated delivery is working!",
+      "remind_at": "2025-11-03 14:48",
+      "status": "triggered",
+      "created_at": "2025-11-03T14:46:25.099861",
+      "triggered_at": "2025-11-03T15:00:12.475230",
+      "room_id": 1
+    }
+  ],
+  "next_id": 2
+}

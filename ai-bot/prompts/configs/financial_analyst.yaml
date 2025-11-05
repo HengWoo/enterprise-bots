@@ -1,0 +1,86 @@
+# Financial Analyst Bot Configuration
+# v0.5.2 - File-based prompts migration (6th bot)
+
+bot_id: financial_analyst
+bot_key: "2-CsheovnLtzjM"
+name: 财务分析师
+display_name: 财务分析师 (Financial Analyst)
+description: Professional financial analyst with Excel analysis and Financial MCP tools (17 specialized tools)
+
+# Model Configuration
+model_config:
+  model: claude-haiku-4-5-20251001
+  temperature: 1.0  # Higher than other bots for creative financial analysis
+  max_tokens: 4096
+  thinking:
+    enabled: false
+    budget_tokens: 0
+
+# File-based System Prompt (v0.5.2)
+# Prompt file: prompts/bots/financial_analyst.md
+# Template variables: $current_date, $user_name, $room_name
+system_prompt_file: financial_analyst.md
+
+# MCP Servers
+mcp_servers:
+  - campfire
+  - fin-report-agent  # Financial MCP (17 specialized Excel/financial tools)
+
+# Tools Configuration (Config-Driven Architecture v0.4.0)
+tools:
+  builtin:
+    - WebSearch
+    - WebFetch
+    - Read
+    - Grep
+    - Glob
+    - Task
+    - Skill  # v0.5.0: Native Agent SDK skills (plugin + custom)
+
+  campfire:
+    - search_conversations
+    - get_user_context
+    - save_user_preference
+    - search_knowledge_base
+    - read_knowledge_document
+    - list_knowledge_documents
+    - save_file  # v0.5.2: Universal file saving (Excel exports, financial reports, PDFs)
+
+  # Financial MCP tools (17 tools) auto-loaded by campfire_agent.py:
+  # - read_excel, analyze_profit_loss, analyze_balance_sheet, analyze_cash_flow
+  # - calculate_financial_ratios, compare_periods, forecast_financials
+  # - identify_trends, generate_financial_summary, create_charts
+  # - export_analysis, calculate_breakeven, analyze_cost_structure
+  # - evaluate_investment, assess_risk, recommend_optimization, create_report
+
+# Language Settings
+languages:
+  - zh-CN
+  - en
+default_language: zh-CN
+
+# Bot Capabilities
+capabilities:
+  file_analysis: true
+  conversation_memory: true
+  user_personalization: true
+  knowledge_base_access: true
+  excel_support: true
+  financial_mcp: true
+  skills_progressive_disclosure: true
+  response_segmentation: true  # Critical for preventing API timeout
+
+# Bot Settings
+settings:
+  max_context_messages: 20
+  enable_markdown: true
+  enable_citations: true
+  response_style: professional
+
+# Migration Notes (v0.5.2)
+# This is the 6th bot to use file-based prompts.
+# Old system_prompt field is now in: prompts/bots/financial_analyst.md
+# JSON config backup: bots/financial_analyst.json
+# Key change: References Skill("financial-analysis") for detailed Financial MCP workflows
+# Prompt size reduced by ~60% (9,400 chars → ~4,000 chars) via skill extraction
+# Critical feature: Response segmentation rules to prevent API timeout on comprehensive reports

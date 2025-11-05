@@ -1,0 +1,84 @@
+# Menu Engineer Bot Configuration
+# v0.5.2 - File-based prompts migration (7th and final bot)
+
+bot_id: menu_engineer
+bot_key: "19-gawmDGiVGP4u"
+name: 菜单工程师
+display_name: 菜单工程师 (Menu Engineer)
+description: Menu engineering specialist using Boston Matrix methodology to analyze dish profitability and provide data-driven recommendations
+
+# Model Configuration
+model_config:
+  model: claude-haiku-4-5-20251001
+  temperature: 0.7
+  max_tokens: 4096
+  thinking:
+    enabled: false
+    budget_tokens: 0
+
+# File-based System Prompt (v0.5.2)
+# Prompt file: prompts/bots/menu_engineer.md
+# Template variables: $current_date, $user_name, $room_name
+system_prompt_file: menu_engineer.md
+
+# MCP Servers
+mcp_servers:
+  - campfire
+
+# Tools Configuration (Config-Driven Architecture v0.4.0)
+tools:
+  builtin:
+    - WebSearch
+    - WebFetch
+    - Read
+    - Grep
+    - Glob
+    - Task
+    - Skill  # v0.5.0: Native Agent SDK skills
+
+  campfire:
+    - search_conversations
+    - get_user_context
+    - save_user_preference
+    - search_knowledge_base
+    - read_knowledge_document
+    - list_knowledge_documents
+    - get_menu_profitability
+    - get_top_profitable_dishes
+    - get_low_profit_dishes
+    - get_cost_coverage_rate
+    - get_dishes_missing_cost
+    - save_file  # v0.5.2: Universal file saving (menu analysis reports)
+
+# Language Settings
+languages:
+  - zh-CN
+  - en
+default_language: zh-CN
+
+# Bot Capabilities
+capabilities:
+  file_analysis: false
+  conversation_memory: true
+  user_personalization: true
+  knowledge_base_access: true
+  menu_engineering: true
+  boston_matrix_analysis: true
+  profitability_analysis: true
+  cost_analysis: true
+  pricing_recommendations: true
+  data_coverage_check: true
+
+# Bot Settings
+settings:
+  max_context_messages: 20
+  enable_markdown: false  # Uses HTML instead
+  enable_citations: true
+  response_style: analytical
+
+# Migration Notes (v0.5.2)
+# This is the 7th and FINAL bot to use file-based prompts (100% migration complete!)
+# Old system_prompt field is now in: prompts/bots/menu_engineer.md
+# JSON config backup: bots/menu_engineering.json
+# All 5 menu engineering tools accessed via Campfire MCP
+# Boston Matrix analysis: Stars, Puzzles, Plowhorses, Dogs

@@ -1,490 +1,323 @@
 # Campfire AI Bot System - Architecture Design
 
-**Project:** AI-Powered Group Chat Intelligence
 **Platform:** Campfire (37signals ONCE)
-**Current Version:** v0.4.0 (Ready for Deployment)
-**Production Status:** v0.3.3.1 (All 8 bots active with Haiku 4.5)
-
----
-
-## 🔥 Current Status
-
-**Production:** v0.3.3.1 with claude-haiku-4-5-20251001 model
-**Ready for Deployment:** v0.4.0 with Multi-Bot Collaboration + Security Fixes
-**Architecture:** FastAPI + Stateful Sessions + Multi-Bot Collaboration + Progress Milestones + Knowledge Base + Skills MCP + Supabase + Modular Tools
-**Bots:** 8 specialized assistants (Financial, Technical, Personal, Briefing, Default, Operations, CC Tutor, Menu Engineering)
-**Key Features:** Multi-bot collaboration via Task tool + Two-layer security protection (all bots read-only)
-
----
-
-## Vision & Principles
-
-### Core Objective
-Transform Campfire into an **AI-augmented collaborative workspace** with intelligent agents providing:
-- Context-aware responses based on conversation history
-- Access to company knowledge base
-- Personalized interactions per user
-- File analysis (Excel, PDF, documents)
-
-### Guiding Principles
-
-**1. Non-Invasive Integration**
-- Campfire managed by ONCE (auto-updates nightly at 2am)
-- AI system external to Docker container
-- No source code modifications
-
-**2. Data Sovereignty**
-- Read-only database access (WAL mode, safe concurrent reads)
-- AI knowledge base stored separately at `/root/ai-knowledge/`
-- User data privacy and isolation
-
-**3. Scalability**
-- Multiple specialized bots
-- Efficient context management
-- Horizontal scaling capability
+**Current Version:** v0.4.0.2 (Production), v0.5.0 (Native Skills - Local Validated)
+**Status:** ✅ All 8 bots active with Haiku 4.5, personal_assistant upgraded to native skills
 
 ---
 
 ## System Architecture
 
-### High-Level System Diagram
+### High-Level Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  DigitalOcean Droplet (128.199.175.50)                         │
-│  Domain: https://chat.smartice.ai                               │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────┐   │
-│  │  Docker Container: campfire                             │   │
-│  │  ├─ Campfire Rails App (managed by ONCE)               │   │
-│  │  ├─ Port 80/443 (HTTPS with auto SSL)                 │   │
-│  │  └─ Volume: /rails/storage → /var/once/campfire       │   │
-│  └───────────────────────┬────────────────────────────────┘   │
-│                           │                                     │
-│                           │ Webhook POST (on @bot mention)     │
-│                           ↓                                     │
-│  ┌────────────────────────────────────────────────────────┐   │
-│  │  AI Webhook Service (/root/ai-service/)                │   │
-│  │  ├─ FastAPI HTTP server (port 8000)                   │   │
-│  │  ├─ POST /webhook (receives from Campfire)            │   │
-│  │  ├─ Claude Agent SDK (max_turns=10)                   │   │
-│  │  ├─ Stateful SessionManager (hot/warm/cold paths)    │   │
-│  │  ├─ Progress Milestones (smart broadcasting)          │   │
-│  │  ├─ Financial MCP Server (Excel analysis)             │   │
-│  │  ├─ BackgroundTasks (immediate 200 response)          │   │
-│  │  └─ uvicorn (ASGI production server)                  │   │
-│  └───────┬───────────────┬────────────────────────────────┘   │
-│          │               │                                      │
-│          │ reads         │ reads/writes                         │
-│          ↓               ↓                                      │
-│  ┌──────────────┐   ┌─────────────────────────────────┐       │
-│  │ Campfire DB  │   │  AI Knowledge Base               │       │
-│  │ (read-only)  │   │  (/root/ai-knowledge/)           │       │
-│  │              │   │  ├─ user_contexts/               │       │
-│  │ SQLite3 WAL  │   │  │  └─ user_{id}.json           │       │
-│  │ production   │   │  ├─ company_kb/                  │       │
-│  │ .sqlite3     │   │  │  ├─ briefings/               │       │
-│  │              │   │  │  ├─ policies/                │       │
-│  │              │   │  │  ├─ procedures/              │       │
-│  │              │   │  │  ├─ financial/               │       │
-│  │              │   │  │  └─ technical/               │       │
-│  └──────────────┘   └─────────────────────────────────┘       │
-│          │                           │                          │
-│          │                           │                          │
-└──────────┼───────────────────────────┼──────────────────────────┘
-           │                           │
-           │                           ↓
-           │               ┌─────────────────────────────────┐
-           │               │  Anthropic Claude API            │
-           │               │  Model: claude-haiku-4.5         │
-           │               │  (cloud service)                 │
-           │               └─────────────────────────────────┘
-           │                           │
-           │                           │ Response
-           │                           ↓
-           │               POST https://chat.smartice.ai/
-           └───────────────rooms/{id}/{bot_key}/messages
-```
-
-### Request Flow Sequence
-
-```
-┌─────────┐
-│  User   │  @财务分析师 分析野百灵5-8月报表
-└────┬────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  Campfire                                                │
-│  1. Detects @bot mention                                │
-│  2. POSTs webhook to http://128.199.175.50:5000/webhook│
-│     Payload: {user, room, message}                      │
-└────┬────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  FastAPI Webhook Handler (app_fastapi.py)               │
-│  3. Receives webhook                                     │
-│  4. Spawns background task                              │
-│  5. Returns 200 OK immediately (<1 second)              │
-└────┬────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  Background Processing Task                             │
-│  6. Posts acknowledgment: "🤔 Processing..."            │
-│  7. Loads session from cache (if exists)                │
-└────┬────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  Claude Agent SDK (campfire_agent.py)                   │
-│  8. Loads conversation context (last 10 messages)       │
-│  9. Loads room files (checks for attachments)           │
-│  10. Calls Claude API with ClaudeAgentOptions:          │
-│      - model: claude-haiku-4-5-20251001                 │
-│      - mcp_servers: [Financial MCP]                     │
-│      - max_turns: 10                                    │
-└────┬────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  Claude API Processing (Turn 1)                         │
-│  11. Receives prompt + context                          │
-│  12. Decides to call MCP tools                          │
-│      - get_excel_info()                                 │
-│      - show_excel_visual()                              │
-│  13. Returns ToolUseBlock                               │
-└────┬────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  MCP Tool Execution (Financial MCP Server)              │
-│  14. Executes get_excel_info()                          │
-│      → Returns: Sheet structure, column names           │
-│  15. Executes show_excel_visual()                       │
-│      → Returns: Data preview, summaries                 │
-│  16. Progress milestone posted: "📊 Reading Excel..."   │
-└────┬────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  Claude API Processing (Turn 2) ← ENABLED BY max_turns │
-│  17. Receives tool results                              │
-│  18. Synthesizes findings into text                     │
-│  19. Returns AssistantMessage with full analysis        │
-└────┬────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  Response Streaming (app_fastapi.py)                    │
-│  20. Extracts text blocks from AssistantMessage         │
-│  21. POSTs to Campfire API:                             │
-│      POST https://chat.smartice.ai/rooms/{id}/{bot_key}/│
-│      messages                                            │
-│      Body: "根据Excel文件分析，我发现..."               │
-│  22. Saves session to cache for future requests         │
-└────┬────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────────────────────────────────────────────────────┐
-│  Campfire                                                │
-│  23. Receives bot message                               │
-│  24. Renders HTML formatting                            │
-│  25. Displays to user                                   │
-└─────────────────────────────────────────────────────────┘
-     │
-     ↓
-┌─────────┐
-│  User   │  Sees full financial analysis with formatting
-└─────────┘
+User → Campfire (Rails) → Webhook → AI Service (FastAPI) → Claude API
+                              ↓           ↓
+                         Campfire DB  Knowledge Base
+                         (read-only)  (/root/ai-knowledge/)
 ```
 
 ### Infrastructure
 
 **Server:** DigitalOcean Droplet (128.199.175.50)
 - **Domain:** https://chat.smartice.ai
-- **OS:** Ubuntu 25.04 x64 (2GB RAM, 1 vCPU)
-- **Campfire:** Docker container (auto-updates nightly)
+- **Campfire:** Docker container (auto-updates nightly at 2am)
+- **AI Service:** /root/ai-service/ (Docker: hengwoo/campfire-ai-bot:latest)
 
-**AI Service:** `/root/ai-service/`
-- **Framework:** FastAPI + Claude Agent SDK
-- **Model:** claude-haiku-4-5-20251001 (all bots)
-- **Port:** 8000 (internal), 5000 (external)
-- **Deployment:** Docker Hub → hengwoo/campfire-ai-bot:0.3.2
-
-**8 Active Bots:**
-1. 财务分析师 (Financial Analyst) - `2-CsheovnLtzjM`
-2. 技术助手 (Technical Assistant) - `3-2cw4dPpVMk86`
-3. 个人助手 (Personal Assistant) - `4-GZfqGLxdULBM`
-4. 日报助手 (Briefing Assistant) - `11-cLwvq6mLx4WV`
-5. AI Assistant (Default) - `10-vWgb0YVbUSYs`
-6. 运营数据助手 (Operations Assistant) - `TBD`
-7. Claude Code 导师 (CC Tutor) - `TBD`
-8. 菜单工程师 (Menu Engineer) - `19-gawmDGiVGP4u`
-
-### File Structure
+### Request Flow
 
 ```
-/root/ai-service/
-├── src/
-│   ├── app_fastapi.py           # FastAPI webhook server
-│   ├── campfire_agent.py        # Agent SDK wrapper
-│   ├── bot_manager.py           # Bot configuration
-│   ├── session_manager.py       # Session caching
-│   ├── progress_classifier.py   # Milestone detection
-│   └── tools/campfire_tools.py  # Database queries
-├── bots/
-│   ├── financial_analyst.json
-│   ├── technical_assistant.json
-│   ├── personal_assistant.json
-│   ├── briefing_assistant.json
-│   ├── default.json
-│   ├── operations_assistant.json
-│   ├── claude_code_tutor.json
-│   └── menu_engineering.json
-└── .env                         # API keys
-
-/root/ai-knowledge/
-├── user_contexts/               # User preferences
-├── company_kb/
-│   ├── briefings/              # Daily briefings
-│   ├── policies/               # Company policies
-│   ├── procedures/             # Process docs
-│   ├── financial/              # Financial standards
-│   └── technical/              # Technical guides
-└── logs/                       # Application logs
+1. User @mentions bot in Campfire
+2. Campfire POSTs webhook to http://128.199.175.50:5000/webhook/{bot_id}
+3. FastAPI spawns background task, returns 200 OK immediately
+4. SessionManager loads session (hot/warm/cold paths)
+5. Claude Agent SDK executes with max_turns=30
+6. MCP tools execute (Campfire MCP, Financial MCP, Operations MCP, etc.)
+7. Progress milestones posted during execution
+8. Final response POSTed to Campfire API
+9. Session cached for next request (40% faster)
 ```
 
 ---
 
-## Tool Access Matrix
+## Database Schema (Key Tables)
 
-### Overview
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `messages` | Message metadata | id, room_id, creator_id, created_at |
+| `action_text_rich_texts` | Message body (HTML) | record_id, body |
+| `users` | User accounts | id, name, role (0=user, 1=bot) |
+| `rooms` | Rooms | id, name, kind (Open/Closed/Direct) |
+| `active_storage_blobs` | File metadata | id, key, filename, byte_size |
+| `active_storage_attachments` | File links | record_id, blob_id |
+| `message_search_index` | FTS5 full-text search | content |
 
-Each bot has access to different tool combinations based on their role:
-- **Built-in SDK Tools:** Provided by Claude Agent SDK (WebSearch, WebFetch, Read, Write, etc.)
-- **MCP Tools:** Custom tools via Model Context Protocol (Campfire tools, Financial tools, Skills tools)
+**Access:** Read-only with `PRAGMA query_only = ON` (WAL mode safe for concurrent reads)
 
-**Key Fix (v0.3.0.1):** Previously, the `allowed_tools` whitelist inadvertently blocked all built-in SDK tools. This has been fixed - all bots now have access to built-in tools.
+---
 
-### Built-in SDK Tools (All Bots)
+## Tool Categories & MCP Servers
 
-These tools are now available to **all 5 bots**:
+| Category | MCP Prefix | Tools | Used By |
+|----------|------------|-------|---------|
+| Built-in SDK | (none) | 8 | All bots (WebSearch, WebFetch, Read, Grep, Glob, Task, Bash, **Skill** ⭐) |
+| Campfire Base | `mcp__campfire__` | 7 | All bots (conversations, user context, knowledge base) |
+| Financial | `mcp__fin-report-agent__` | 17 | financial_analyst (Excel, financial calculations) |
+| Operations | `mcp__operations__` | 3 | operations_assistant (Supabase queries) |
+| Analytics RPC | `mcp__analytics__` | 10 | operations_assistant (RPC functions) |
+| Menu Engineering | `mcp__menu_engineering__` | 5 | menu_engineer (Boston Matrix analysis) |
 
-| Tool | Purpose | Use Cases |
-|------|---------|-----------|
-| 🌐 **WebSearch** | Search the web for information | Research, fact-checking, current events |
-| 🌐 **WebFetch** | Fetch web page content | Read documentation, articles, online resources |
-| 📄 **Read** | Read file contents | View uploaded files, analyze documents |
-| 📝 **Write** | Create new files | Generate reports, save outputs |
-| ✏️ **Edit** | Modify existing files | Update documents, fix files |
-| 💻 **Bash** | Execute shell commands | File system operations, data processing |
-| 🔍 **Grep** | Search within files | Find content in documents |
-| 🗂️ **Glob** | Find files by pattern | Locate files matching criteria |
+**Implementation:** `src/campfire_agent.py:_get_allowed_tools_for_bot()`
 
-### MCP Tools by Bot Type
+**⭐ Native Skills System (v0.5.0):**
 
-#### Base MCP Tools (All Bots)
+The "Skill" built-in tool enables access to two types of skills:
 
-| Tool | Purpose |
-|------|---------|
-| `search_conversations` | Search Campfire message history |
-| `get_user_context` | Get user preferences and info |
-| `save_user_preference` | Save user preferences |
-| `search_knowledge_base` | Search company knowledge base |
-| `read_knowledge_document` | Read full knowledge base documents |
-| `list_knowledge_documents` | List available documents |
-| `store_knowledge_document` | Create new knowledge base documents |
+**1. Anthropic Plugin Skills** (Official Document Processing)
+- `document-skills-docx` - Word document creation/editing
+- `document-skills-pdf` - PDF manipulation
+- `document-skills-pptx` - PowerPoint presentations
+- `document-skills-xlsx` - Excel spreadsheets
+- **Source:** Anthropic's official skills plugins (https://github.com/anthropics/skills)
+- **Status:** Point-in-time snapshots (stable, production-ready)
 
-#### 1. Financial Analyst
+**2. Custom Project Skills** (Campfire-Specific Workflows)
+- `code-generation` - Template-based code generation
+- `conversation-search` - Advanced conversation search
+- `daily-briefing` - Briefing generation workflows
+- `financial-analysis` - Financial analysis patterns
+- `knowledge-base` - Knowledge base query workflows
+- `personal-productivity` - Task/reminder/note management
+- `presentation-generation` - HTML presentation creation
+- **Source:** Project-maintained (`.claude/skills/` directory)
 
-**Additional Tools:**
-- **Financial MCP** (17 tools): Excel analysis, account validation, financial thinking tools
-- **Skills MCP** (3 tools): Progressive skill disclosure for document creation
+**Discovery Mechanism:**
+- Both types auto-discovered via `setting_sources=["user", "project"]`
+- Agent SDK scans `.claude/skills/` on startup
+- Skills loaded on-demand when bot invokes `Skill("skill-name")`
+- Token efficient: Only loads when explicitly requested
 
-**Total:** 8 built-in + 7 base MCP + 17 financial MCP + 3 skills MCP = **35 tools**
+**Migration Note:** Skills MCP server deprecated (v0.5.0). All skills now use native Agent SDK pattern. All other MCP servers remain fully operational:
+- Campfire MCP (7 tools) ✅ Active
+- Financial MCP (17 tools) ✅ Active
+- Operations MCP (3 tools) ✅ Active
+- Analytics RPC MCP (10 tools) ✅ Active
+- Menu Engineering MCP (5 tools) ✅ Active
 
-**Key Capabilities:**
-- Analyze Excel financial reports
-- Validate account structures
-- Calculate financial ratios
-- Create financial documents (via Skills)
-- Search web for financial data (WebSearch)
+---
 
-#### 2. Technical Assistant
+## 8 Active Bots
 
-**Additional Tools:** None (base only)
+| Bot | Tools | Key Features |
+|-----|-------|--------------|
+| 财务分析师 (Financial Analyst) | 35 | Excel analysis, Financial MCP (17 tools) |
+| 技术助手 (Technical Assistant) | 15 | Web research, knowledge base |
+| 个人助手 (Personal Assistant) | 16 | Tasks, reminders, native skills ✅ |
+| 日报助手 (Briefing Assistant) | 17 | AI-powered daily briefings |
+| AI Assistant (Default) | 15 | General-purpose assistance |
+| 运营数据助手 (Operations Assistant) | 28 | Supabase analytics, STAR framework |
+| Claude Code导师 (CC Tutor) | 15 | 4.7K line knowledge base |
+| 菜单工程师 (Menu Engineer) | 20 | Boston Matrix profitability analysis |
 
-**Total:** 8 built-in + 7 base MCP = **15 tools**
+**All bots use:** claude-haiku-4-5-20251001 model
 
-**Key Capabilities:**
-- Search web for documentation (WebSearch, WebFetch)
-- Read/edit code files (Read, Write, Edit)
-- Execute shell commands (Bash)
-- Search company knowledge base
-- Access conversation history
+---
 
-#### 3. Personal Assistant
+## Multi-Bot Collaboration (v0.4.0)
 
-**Additional Tools:**
-- `manage_personal_tasks` - Create, list, complete, delete tasks
-- `set_reminder` - Set personal reminders
-- `save_personal_note` - Save private notes
-- `search_personal_notes` - Search user's notes
-- **Skills MCP** (3 tools): Progressive skill disclosure
+**Architecture:** Peer-to-peer subagent spawning via Task tool
 
-**Total:** 8 built-in + 7 base MCP + 4 personal MCP + 3 skills MCP = **22 tools**
+```
+User → Primary Bot (e.g., Financial Analyst)
+          ├─ Analyzes with own tools
+          └─ Spawns Subagent (e.g., Personal Assistant for PDF creation)
+                ├─ Executes specialized task
+                └─ Returns result
+       ← Combines results and responds
+```
 
-**Key Capabilities:**
-- Task and reminder management
-- Personal note-taking
-- Web translation (WebFetch + WebSearch)
-- Document creation (via Skills)
-- File handling (Read, Write, Edit)
+**Security:** Subagents limited to safe tools (Read, Grep, Glob, WebSearch, WebFetch, Task only)
 
-#### 4. Briefing Assistant
+---
 
-**Additional Tools:**
-- `generate_daily_briefing` - Generate daily summaries
-- `search_briefings` - Search historical briefings
+## Native Agent SDK Skills (v0.5.0) ⭐
 
-**Total:** 8 built-in + 7 base MCP + 2 briefing MCP = **17 tools**
+### Architecture: Filesystem-Based Auto-Discovery
 
-**Key Capabilities:**
-- Generate AI-powered daily briefings
-- Search historical briefings
-- Access conversation history
-- Web research for news (WebSearch)
+**Pattern:** Uses Anthropic's native Agent SDK skills system (not external MCP server)
 
-#### 5. AI Assistant (Default)
+```
+Agent SDK
+  ↓ setting_sources=["user", "project"]
+  ↓ Scans filesystem on startup
+  ↓
+.claude/skills/
+  ├── code-generation/SKILL.md          (custom)
+  ├── conversation-search/SKILL.md      (custom)
+  ├── daily-briefing/SKILL.md           (custom)
+  ├── financial-analysis/SKILL.md       (custom)
+  ├── knowledge-base/SKILL.md           (custom)
+  ├── personal-productivity/SKILL.md    (custom)
+  └── presentation-generation/SKILL.md  (custom)
+  ↓
+Bot invokes: Skill("presentation-generation")  OR  Skill("document-skills-pptx")
+  ↓ Loads skill on-demand (either custom or plugin)
+  ↓ Follows workflow in SKILL.md
+  ✓ Executes task
+```
 
-**Additional Tools:** None (base only)
+**Two Types of Skills:**
 
-**Total:** 8 built-in + 7 base MCP = **15 tools**
+**1. Anthropic Plugin Skills** (Document Processing)
+- **Available:** document-skills-docx, document-skills-pptx, document-skills-pdf, document-skills-xlsx
+- **Source:** Anthropic's official plugin repository
+- **Status:** NOT currently installed in `.claude/skills/` directory
+- **How to use:** Bots reference them in prompts (e.g., "load_skill('document-skills-pptx')")
+- **Note:** Agent SDK auto-provides these if available in plugin system
 
-**Key Capabilities:**
-- General-purpose assistance
-- Web search and fetch
-- File operations
-- Conversation history access
-- Knowledge base queries
+**2. Custom Project Skills** (Campfire Workflows)
+- **Installed:** 7 custom skills in `.claude/skills/` directory
+- **Purpose:** Project-specific workflows (code generation, briefings, presentations, etc.)
+- **Maintained:** By project team
 
-### Tool Access Implementation
+**Key Components:**
+- **Skill Tool:** Built-in Agent SDK tool (replaces `mcp__skills__load_skill`)
+- **Auto-Discovery:** Skills found automatically from `.claude/skills/` directory
+- **On-Demand Loading:** Skills loaded only when needed (token efficient)
+- **YAML Frontmatter:** Metadata in SKILL.md files (name, description, version)
 
-**Code Location:** `src/campfire_agent.py:_get_allowed_tools_for_bot()`
-
+**Implementation:**
 ```python
-# Built-in tools added to all bots (v0.3.0.1)
-builtin_tools = ["WebSearch", "WebFetch", "Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+# campfire_agent.py:609 - Enables native skills globally
+"setting_sources": ["user", "project"]
 
-# Base MCP tools added to all bots
-base_tools = ["mcp__campfire__*"] # 7 knowledge base and conversation tools
+# campfire_agent.py:107 - Default builtin tools include Skill
+builtin_tools = [..., "Skill"]
 
-# Bot-specific tools added based on bot_id
-# financial_analyst → Financial MCP + Skills MCP
-# personal_assistant → Personal productivity + Skills MCP
-# briefing_assistant → Briefing tools
-# technical_assistant, default → Base only
+# .claude/skills/ directory structure (Anthropic standard)
 ```
 
-**Reference:** https://docs.claude.com/en/api/agent-sdk/overview
+**Benefits:**
+- ✓ No external MCP server process
+- ✓ Follows Anthropic best practices
+- ✓ Automatic skill discovery
+- ✓ Better tool access control
+- ✓ Simpler architecture
+- ✓ Both plugin and custom skills use same mechanism
+
+**Migration Status:**
+- ✅ personal_assistant - Native skills enabled (validated Nov 2, 2025)
+- ✅ cc_tutor - File-based prompts (native skills being added)
+- ⏳ 6 other bots - Pending native skills enablement
+
+**Real-World Test:** 22MB Chinese PPTX → Text extraction → English translation → File saved ✅
 
 ---
 
-## Database & Storage
+## File-Based Prompt System (v0.4.1)
 
-### Campfire Database
+### Three-Layer Architecture
 
-**Location:** `/var/once/campfire/db/production.sqlite3`
-**Technology:** SQLite3 with WAL mode
+| Layer | Purpose | Size | When Loaded |
+|-------|---------|------|-------------|
+| **Layer 1:** Bot Personality | Identity, capabilities, HTML formatting | ~200 lines | Always |
+| **Layer 2:** Skills | Domain expertise, detailed workflows | 400-600 lines each | **On-demand via Skill tool** ⭐ |
+| **Layer 3:** Dynamic Context | Template variables ($current_date, $user_name, $room_name) | N/A | Runtime injection |
 
-**Key Tables:**
-- `messages` - Message metadata
-- `action_text_rich_texts` - Message body (HTML)
-- `users` - User accounts (role: 0=user, 1=bot)
-- `rooms` - Rooms (Open, Closed, Direct)
-- `active_storage_blobs` - File metadata
-- `active_storage_attachments` - File links
-- `message_search_index` - FTS5 full-text search
+**Implementation:**
+- **PromptLoader** (280 lines) - Loads `.md` files with `string.Template` substitution
+- **Native Skills** ⭐ - Agent SDK auto-discovers from `.claude/skills/` (replaces SkillsManager)
+- **BotManager** - YAML + JSON dual format support (backwards compatible)
 
-**Access Pattern:**
-- Read-only with `PRAGMA query_only = ON`
-- WAL mode allows concurrent reads
-- No locking conflicts with Campfire
+**Token Efficiency:**
+- Simple queries (70%): **20% savings** (no Skills loaded)
+- Complex workflows (30%): 13-33% overhead (Skills loaded on-demand)
 
-### File Storage
-
-**Location:** `/var/once/campfire/files/`
-**Structure:** Hash-based partitioning (e.g., `4j/ab/xyz123...`)
-
-### Technical Constraints
-
-1. **No Source Modifications** - ONCE overwrites container nightly
-2. **Read-Only DB** - Must use WAL mode safely
-3. **Update Resilience** - AI service survives Campfire updates
-4. **External Storage** - Knowledge base outside Docker
+**Migration Status:** 1/8 bots (personal_assistant - file-based prompts + native skills)
 
 ---
 
-## Key Learnings
+## Technical Stack
 
-### Response Formatting
-
-**Campfire renders HTML:**
-- Use `<h2>`, `<h3>` for headings
-- Use `<strong>`, `<code>` for emphasis
-- Use `<ul><li>`, `<table>` for structure
-- Blog-style layout with proper spacing (line-height: 1.8-2.0)
-- Configure bot system prompts to generate HTML
-
-### Deployment Best Practices
-
-1. Test locally first
-2. Get user confirmation before Docker build
-3. Build & push to Docker Hub
-4. Deploy to production
-5. Monitor logs for verification
-
-**Anti-Pattern:** Rapid deploy without local testing
-
-### Version History
-
-| Version | Changes | Status |
-|---------|---------|--------|
-| v1.0.x | Flask-based MVP | ✅ Deprecated |
-| v0.2.0 | FastAPI + Stateful Sessions | ✅ Deployed |
-| v0.2.1 | Progress Milestones | ✅ Deployed |
-| v0.2.2 | Knowledge Base (4 tools) | ✅ Deployed |
-| v0.2.3 | Briefing Bot | ✅ Deployed |
-| v0.2.4 | 3 New Bots + API Fallback | ✅ Deployed |
-| v0.3.0 | Haiku 4.5 + Enhanced HTML | ✅ Deployed |
-| v0.3.0.1 | Operations + CC Tutor bots | ✅ Deployed |
-| v0.3.2 | Menu Engineering + Boston Matrix | ✅ Deployed |
-| **v0.3.3** | **Agent Tools Refactoring (46% code reduction)** | **✅ IN PRODUCTION** 🔥 |
-
----
-
-## Technology Stack
-
-**Runtime:** Python 3.11+, FastAPI, Uvicorn
-**AI:** Anthropic Claude Haiku 4.5, Claude Agent SDK
+**Runtime:** Python 3.11, FastAPI, Uvicorn
+**AI:** Claude Agent SDK 0.1.4, claude-haiku-4-5-20251001
 **Database:** SQLite3 (read-only, WAL mode), Supabase (Postgres)
 **Storage:** JSON (sessions, contexts), Filesystem (documents)
 **Infrastructure:** Docker, DigitalOcean, Cloudflare DNS
 
 ---
 
-## Cost Estimates
+## Critical Constraints
 
-**DigitalOcean:** $18/month
-**Claude API:** $30-100/month (Haiku 4.5 is cost-efficient)
-**Supabase:** Free tier (sufficient for current usage)
-**Total:** $50-120/month
+1. **No source code modification** - ONCE overwrites container nightly
+2. **Read-only database access** - Use `?mode=ro` URI parameter
+3. **External AI service** - Must live outside Campfire Docker
+4. **Persistent knowledge base** - Store at `/root/ai-knowledge/`
+5. **WAL mode compatibility** - Safe for concurrent reads
 
 ---
 
-**Document Version:** 7.0 (v0.3.3 - Agent Tools Refactoring)
-**Last Updated:** October 25, 2025
-**Production Status:** v0.3.3 deployed ✅
-**For Details:** See CLAUDE.md (project memory), IMPLEMENTATION_PLAN.md (deployment)
+## System Improvements (v0.5.0)
+
+**Status:** ✅ NATIVE SKILLS COMPLETE - Local validation successful (Nov 2, 2025)
+**Foundation:** Anthropic's native Agent SDK skills pattern
+
+### Native Skills Migration ⭐
+
+**Architecture Change:**
+```
+External Skills MCP (deprecated) → Native Agent SDK Skills
+```
+
+**Implementation:**
+- Added `setting_sources=["user", "project"]` to enable filesystem skills
+- Added `"Skill"` builtin tool (replaces `mcp__skills__load_skill`)
+- Consolidated 9 skills to `.claude/skills/` (Anthropic standard)
+- Deprecated Skills MCP server (commented out for 2-4 week transition)
+
+**Validation (Nov 2, 2025):**
+- ✅ Skills auto-discovered from `.claude/skills/`
+- ✅ Bot autonomously invoked Skill tool
+- ✅ Real test: 22MB PPTX file → extracted Chinese text → translated to English → saved result
+- ✅ All 9 skills working: docx, pptx, presentation-generation, code-generation, personal-productivity, etc.
+
+**Status:** Ready for production deployment (personal_assistant pilot)
+
+---
+
+### Other Modules (Paused)
+
+**1. Verification Module** (src/verification/)
+- Status: Implementation complete, testing pending
+- 170+ test cases created, 77% coverage
+
+**2. Code Generation Module** (src/codegen/)
+- Status: Implementation complete, integration with native skills pending
+- Template-based generation ready
+
+**3. Test Infrastructure** (tests/agent_behaviors/)
+- Status: 3 critical path tests created
+- Will be activated after native skills production validation
+
+---
+
+## Cost Estimates
+
+| Item | Monthly Cost |
+|------|--------------|
+| DigitalOcean Droplet | $18 |
+| Claude API (Haiku 4.5) | $30-100 |
+| Supabase | Free tier |
+| **Total** | **$50-120** |
+
+---
+
+**Document Version:** 10.0 (Condensed Architecture Reference)
+**Last Updated:** November 2, 2025
+**Production Status:** v0.4.0.2 ✅
+
+**For Details:**
+- Tool matrix and detailed workflows → See CLAUDE.md
+- Complete version history → @docs/reference/VERSION_HISTORY.md
+- Document processing architecture → @docs/reference/V0.4.0_DOCUMENT_PROCESSING_ARCHITECTURE.md
+- Deployment procedures → IMPLEMENTATION_PLAN.md

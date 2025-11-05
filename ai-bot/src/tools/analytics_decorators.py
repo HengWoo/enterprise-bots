@@ -50,6 +50,44 @@ async def get_daily_revenue_tool(args):
             }]
         }
 
+    try:
+        # Extract parameters
+        target_date = args.get('target_date')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_daily_revenue(target_date=target_date)
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            data = result['data']
+            response_text = f"📊 **{target_date or '今天'}营业额报告**\n\n"
+            response_text += f"💰 总营业额: ¥{data.get('total_revenue', 0):,.2f}\n"
+            response_text += f"📦 订单总数: {data.get('order_count', 0)} 单\n"
+            response_text += f"📈 平均客单价: ¥{data.get('avg_order_value', 0):,.2f}\n\n"
+
+            # Order status breakdown if available
+            if data.get('by_status'):
+                response_text += "**订单状态分布:**\n"
+                for status, count in data['by_status'].items():
+                    response_text += f"- {status}: {count} 单\n"
+        else:
+            response_text = f"未找到 {target_date or '今天'} 的营业数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询营业额失败：{str(e)}"
+            }]
+        }
+
 
 @tool(
     name="get_revenue_by_zone",
@@ -81,6 +119,45 @@ async def get_revenue_by_zone_tool(args):
             "content": [{
                 "type": "text",
                 "text": "⚠️ **Supabase tools not available**"
+            }]
+        }
+
+    try:
+        # Extract parameters
+        start_date = args.get('start_date')
+        end_date = args.get('end_date')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_revenue_by_zone(
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            zones = result['data']
+            response_text = f"📍 **各区域营业额分析**\n\n"
+
+            for i, zone in enumerate(zones, 1):
+                response_text += f"**{i}. {zone.get('zone_name', 'Unknown')}**\n"
+                response_text += f"   💰 营业额: ¥{zone.get('revenue', 0):,.2f}\n"
+                response_text += f"   📦 订单数: {zone.get('order_count', 0)} 单\n"
+                response_text += f"   📈 平均客单价: ¥{zone.get('avg_order_value', 0):,.2f}\n\n"
+        else:
+            response_text = "未找到区域营业数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询区域营业额失败：{str(e)}"
             }]
         }
 
@@ -119,6 +196,48 @@ async def get_top_dishes_tool(args):
             }]
         }
 
+    try:
+        # Extract parameters
+        start_date = args.get('start_date')
+        end_date = args.get('end_date')
+        top_n = args.get('top_n', 10)
+
+        # Call underlying implementation
+        result = _supabase_tools.get_top_dishes(
+            start_date=start_date,
+            end_date=end_date,
+            top_n=top_n
+        )
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            dishes = result['data']
+            response_text = f"🏆 **销量前{len(dishes)}名菜品**\n\n"
+
+            for i, dish in enumerate(dishes, 1):
+                medal = "🥇" if i == 1 else ("🥈" if i == 2 else ("🥉" if i == 3 else f"{i}."))
+                response_text += f"{medal} **{dish.get('dish_name', 'Unknown')}**\n"
+                response_text += f"   销量: {dish.get('quantity_sold', 0)} 份\n"
+                response_text += f"   营业额: ¥{dish.get('revenue', 0):,.2f}\n"
+                response_text += f"   订单数: {dish.get('order_count', 0)} 单\n\n"
+        else:
+            response_text = "未找到菜品销售数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询畅销菜品失败：{str(e)}"
+            }]
+        }
+
 
 @tool(
     name="get_station_performance",
@@ -150,6 +269,45 @@ async def get_station_performance_tool(args):
             "content": [{
                 "type": "text",
                 "text": "⚠️ **Supabase tools not available**"
+            }]
+        }
+
+    try:
+        # Extract parameters
+        start_date = args.get('start_date')
+        end_date = args.get('end_date')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_station_performance(
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            stations = result['data']
+            response_text = f"👨‍🍳 **厨房工作站业绩分析**\n\n"
+
+            for station in stations:
+                response_text += f"**{station.get('station_name', 'Unknown')}**\n"
+                response_text += f"   出品数: {station.get('items_cooked', 0)} 道\n"
+                response_text += f"   营业额: ¥{station.get('revenue', 0):,.2f}\n"
+                response_text += f"   均价: ¥{station.get('avg_price', 0):,.2f}\n\n"
+        else:
+            response_text = "未找到工作站数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询工作站业绩失败：{str(e)}"
             }]
         }
 
@@ -186,6 +344,40 @@ async def get_quick_stats_tool(args):
             }]
         }
 
+    try:
+        # Extract parameters
+        target_date = args.get('target_date')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_quick_stats(target_date=target_date)
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            stats = result['data']
+            response_text = f"⚡ **{target_date or '今天'}快速统计**\n\n"
+            response_text += f"💰 营业额: ¥{stats.get('revenue', 0):,.2f}\n"
+            response_text += f"📦 订单数: {stats.get('orders', 0)} 单\n"
+            response_text += f"🏆 Top菜品: {stats.get('top_dish', 'N/A')}\n"
+            response_text += f"🔥 高峰时段: {stats.get('busiest_hour', 'N/A')}\n"
+            response_text += f"📊 桌台状态: {stats.get('table_status', 'N/A')}\n"
+        else:
+            response_text = f"未找到 {target_date or '今天'} 的统计数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询快速统计失败：{str(e)}"
+            }]
+        }
+
 
 @tool(
     name="get_hourly_revenue",
@@ -216,6 +408,42 @@ async def get_hourly_revenue_tool(args):
             "content": [{
                 "type": "text",
                 "text": "⚠️ **Supabase tools not available**"
+            }]
+        }
+
+    try:
+        # Extract parameters
+        target_date = args.get('target_date')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_hourly_revenue(target_date=target_date)
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            hours = result['data']
+            response_text = f"⏰ **{target_date or '今天'}按小时营业额分析**\n\n"
+
+            for hour_data in hours:
+                hour = hour_data.get('hour', 'Unknown')
+                response_text += f"**{hour}:00**\n"
+                response_text += f"   订单: {hour_data.get('order_count', 0)} 单\n"
+                response_text += f"   营业额: ¥{hour_data.get('revenue', 0):,.2f}\n"
+                response_text += f"   均价: ¥{hour_data.get('avg_order_value', 0):,.2f}\n\n"
+        else:
+            response_text = f"未找到 {target_date or '今天'} 的小时数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询小时营业额失败：{str(e)}"
             }]
         }
 
@@ -253,6 +481,48 @@ async def get_table_turnover_tool(args):
             }]
         }
 
+    try:
+        # Extract parameters
+        start_date = args.get('start_date')
+        end_date = args.get('end_date')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_table_turnover(
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            tables = result['data']
+            response_text = f"🪑 **餐桌翻台率分析**\n\n"
+
+            for table in tables[:15]:  # Show top 15 tables
+                response_text += f"**{table.get('table_name', 'Unknown')}** ({table.get('zone', 'N/A')})\n"
+                response_text += f"   翻台: {table.get('order_count', 0)} 次\n"
+                response_text += f"   营业额: ¥{table.get('revenue', 0):,.2f}\n"
+                response_text += f"   容量: {table.get('capacity', 'N/A')} 人\n\n"
+
+            if len(tables) > 15:
+                response_text += f"...还有 {len(tables) - 15} 张桌子\n"
+        else:
+            response_text = "未找到餐桌数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询餐桌翻台率失败：{str(e)}"
+            }]
+        }
+
 
 @tool(
     name="get_return_analysis",
@@ -284,6 +554,46 @@ async def get_return_analysis_tool(args):
             "content": [{
                 "type": "text",
                 "text": "⚠️ **Supabase tools not available**"
+            }]
+        }
+
+    try:
+        # Extract parameters
+        start_date = args.get('start_date')
+        end_date = args.get('end_date')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_return_analysis(
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            returns = result['data']
+            response_text = f"🔙 **退菜分析报告**\n\n"
+
+            for item in returns:
+                response_text += f"**{item.get('dish_name', 'Unknown')}**\n"
+                response_text += f"   退菜次数: {item.get('return_count', 0)} 次\n"
+                response_text += f"   退菜数量: {item.get('quantity_returned', 0)} 份\n"
+                response_text += f"   损失金额: ¥{item.get('revenue_loss', 0):,.2f}\n"
+                response_text += f"   退菜率: {item.get('return_rate', 0):.1f}%\n\n"
+        else:
+            response_text = "未找到退菜数据（这是好消息！）"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询退菜分析失败：{str(e)}"
             }]
         }
 
@@ -321,6 +631,47 @@ async def get_order_type_distribution_tool(args):
             }]
         }
 
+    try:
+        # Extract parameters
+        start_date = args.get('start_date')
+        end_date = args.get('end_date')
+
+        # Call underlying implementation
+        result = _supabase_tools.get_order_type_distribution(
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            types = result['data']
+            response_text = f"📋 **订单类型分布**\n\n"
+
+            for order_type in types:
+                type_name = order_type.get('order_type', 'Unknown')
+                response_text += f"**{type_name}**\n"
+                response_text += f"   订单数: {order_type.get('count', 0)} 单\n"
+                response_text += f"   营业额: ¥{order_type.get('revenue', 0):,.2f}\n"
+                response_text += f"   均价: ¥{order_type.get('avg_order_value', 0):,.2f}\n"
+                response_text += f"   占比: {order_type.get('percentage', 0):.1f}%\n\n"
+        else:
+            response_text = "未找到订单类型数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询订单类型分布失败：{str(e)}"
+            }]
+        }
+
 
 @tool(
     name="get_revenue_trend",
@@ -354,6 +705,62 @@ async def get_revenue_trend_tool(args):
             "content": [{
                 "type": "text",
                 "text": "⚠️ **Supabase tools not available**"
+            }]
+        }
+
+    try:
+        # Extract parameters (REQUIRED for this tool)
+        start_date = args.get('start_date')
+        end_date = args.get('end_date')
+
+        if not start_date or not end_date:
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": "❌ 错误：get_revenue_trend 需要提供 start_date 和 end_date 参数"
+                }]
+            }
+
+        # Call underlying implementation
+        result = _supabase_tools.get_revenue_trend(
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        # Format response
+        if result.get('success') and result.get('data'):
+            days = result['data']
+            response_text = f"📈 **营业额趋势分析** ({start_date} ~ {end_date})\n\n"
+
+            for day in days:
+                date = day.get('date', 'Unknown')
+                response_text += f"**{date}**\n"
+                response_text += f"   营业额: ¥{day.get('total_revenue', 0):,.2f}\n"
+                response_text += f"   订单数: {day.get('order_count', 0)} 单\n"
+                response_text += f"   均价: ¥{day.get('avg_order_value', 0):,.2f}\n"
+
+                # Growth indicator if available
+                if day.get('growth_percentage') is not None:
+                    growth = day['growth_percentage']
+                    arrow = "📈" if growth > 0 else ("📉" if growth < 0 else "➡️")
+                    response_text += f"   {arrow} 增长: {growth:+.1f}%\n"
+
+                response_text += "\n"
+        else:
+            response_text = f"未找到 {start_date} ~ {end_date} 的趋势数据。"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
+
+    except Exception as e:
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"查询营业额趋势失败：{str(e)}"
             }]
         }
 

@@ -1,5 +1,5 @@
 """
-Campfire AI Bot - FastAPI webhook server (v0.4.0.1)
+Campfire AI Bot - FastAPI webhook server (v0.5.0)
 Receives Campfire webhooks and responds using Claude Agent SDK with stateful session management
 
 Key Improvements over Flask (v1.0.14):
@@ -57,23 +57,35 @@ v0.4.0.1 Changes (HTML Formatting Fix):
 - Parallel subagent execution for faster multi-domain analyses
 - Context isolation: Each subagent runs independently without cluttering main conversation
 - Safety: Recursion prevention, clear delegation rules, cost-aware guidance
+
+v0.4.1 Changes (File Download System):
+- Temporary file serving system with UUID token-based download links
+- File registry with automatic expiry (default 1 hour)
+- Background cleanup task (runs every 5 minutes)
+- Three new endpoints: POST /files/register, GET /files/download/{token}, GET /files/stats
+- Foundation for v0.4.2 presentation generation features
 """
 
 import os
 import re
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, Request, BackgroundTasks, Response
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, BackgroundTasks, Response, HTTPException
+from fastapi.responses import JSONResponse, FileResponse
 from dotenv import load_dotenv
 
 from src.tools.campfire_tools import CampfireTools
 from src.bot_manager import BotManager
 from src.session_manager import SessionManager
 from src.request_queue import get_request_queue
+from src.file_registry import file_registry
+from src.exceptions import SessionRecoveryError
+from src.reminder_scheduler import create_scheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 # Load environment variables
@@ -96,6 +108,27 @@ def get_config():
             'You provide clear, actionable insights based on conversation context and user preferences.'
         )
     }
+
+
+def detect_html(message: str) -> bool:
+    """
+    Check if message contains HTML tags.
+
+    Used to determine Content-Type for Campfire API posts:
+    - HTML content → text/html (renders links, formatting)
+    - Plain text → text/plain (progress messages)
+
+    Args:
+        message: Message content to check
+
+    Returns:
+        True if HTML detected, False otherwise
+    """
+    import re
+    # Check for common HTML tags
+    # Pattern matches opening tags: <div>, <p>, <h1-6>, <ul>, <ol>, <li>, <a>, <strong>, <em>, <br>, <table>, <tr>, <td>
+    html_pattern = r'<(?:div|p|h[1-6]|ul|ol|li|a|strong|em|br|table|tr|td)[\s>]'
+    return bool(re.search(html_pattern, message, re.IGNORECASE))
 
 
 async def post_to_campfire(room_id: int, message: str, bot_key: str = None, testing: bool = False):
@@ -129,13 +162,18 @@ async def post_to_campfire(room_id: int, message: str, bot_key: str = None, test
     print(f"[POST] Room ID: {room_id}, BOT_KEY: {actual_bot_key}")
     print(f"[POST] Message preview: {message[:100]}...")
 
+    # Detect if message is HTML and set appropriate Content-Type
+    is_html = detect_html(message)
+    content_type = 'text/html; charset=utf-8' if is_html else 'text/plain; charset=utf-8'
+    print(f"[POST] Content-Type: {content_type} (HTML detected: {is_html})")
+
     try:
         # Use async httpx client
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
                 url,
                 content=message.encode('utf-8'),
-                headers={'Content-Type': 'text/plain; charset=utf-8'}
+                headers={'Content-Type': content_type}
             )
             print(f"[POST] Response status: {response.status_code}")
             response.raise_for_status()
@@ -147,6 +185,32 @@ async def post_to_campfire(room_id: int, message: str, bot_key: str = None, test
             print(f"[POST] Response status: {e.response.status_code}")
             print(f"[POST] Response body: {e.response.text}")
         # Don't raise - we don't want to fail the webhook
+
+
+async def cleanup_expired_files_task():
+    """
+    Background task to clean up expired files from registry.
+
+    Runs every 5 minutes and removes:
+    - Expired file entries from registry
+    - Corresponding files from disk
+    """
+    while True:
+        try:
+            # Wait 5 minutes
+            await asyncio.sleep(60 * 5)
+
+            # Clean up expired files
+            count = file_registry.cleanup_expired()
+            if count > 0:
+                print(f"[FileRegistry] Cleaned up {count} expired files")
+
+        except asyncio.CancelledError:
+            print("[FileRegistry] Cleanup task cancelled")
+            break
+        except Exception as e:
+            print(f"[FileRegistry] Error in cleanup task: {e}")
+            # Continue running even if one iteration fails
 
 
 @asynccontextmanager
@@ -166,7 +230,7 @@ async def lifespan(app: FastAPI):
     config = get_config()
 
     print("=" * 60)
-    print("🚀 Campfire AI Bot v0.4.0 - Multi-format Document Processing (PDF/DOCX/PPTX/Images)")
+    print("🚀 Campfire AI Bot v0.5.2 - Universal File Saving + YAML Bot Configs")
     print("=" * 60)
 
     # Startup: Initialize application state
@@ -185,9 +249,10 @@ async def lifespan(app: FastAPI):
     print(f"[Startup]    knowledge_base_dir: {knowledge_base_dir}")
 
     # Initialize bot manager (loads all bot configurations)
-    bots_dir = os.getenv('BOTS_DIR', './bots')
-    app.state.bot_manager = BotManager(bots_dir=bots_dir)
-    print(f"[Startup] ✅ BotManager loaded {len(app.state.bot_manager.bots)} bot(s) from {bots_dir}:")
+    # v0.4.1: Support multiple bot directories (JSON + YAML)
+    bots_dirs = os.getenv('BOTS_DIRS', './bots,prompts/configs').split(',')
+    app.state.bot_manager = BotManager(bots_dirs=bots_dirs)
+    print(f"[Startup] ✅ BotManager loaded {len(app.state.bot_manager.bots)} bot(s) from {', '.join(bots_dirs)}:")
     for bot_id, bot_info in app.state.bot_manager.list_bots().items():
         print(f"           - {bot_info['display_name']} (model: {bot_info['model']})")
 
@@ -197,22 +262,114 @@ async def lifespan(app: FastAPI):
     )
     print(f"[Startup] ✅ SessionManager initialized (TTL: {config['SESSION_TTL_HOURS']}h)")
 
+    # Clear all session cache files on startup to prevent stale sessions after container restart
+    # This prevents "No conversation found with session ID" errors from cached IDs that no longer exist
+    import glob
+    session_files = glob.glob("./session_cache/session_*.json")
+    if session_files:
+        for file in session_files:
+            try:
+                os.remove(file)
+            except Exception as e:
+                print(f"[Startup] ⚠️  Could not remove session file {file}: {e}")
+        print(f"[Startup] 🗑️  Cleared {len(session_files)} stale session file(s) from disk")
+    else:
+        print(f"[Startup] ✓ No stale session files to clean")
+
     # Initialize request queue (concurrency control)
     app.state.request_queue = get_request_queue()
     print(f"[Startup] ✅ RequestQueue initialized")
+
+    # Start background cleanup task for file registry (v0.4.1)
+    cleanup_task = asyncio.create_task(cleanup_expired_files_task())
+    print(f"[Startup] ✅ File registry cleanup task started (runs every 5 minutes)")
+
+    # Initialize reminder scheduler (v0.5.1)
+    # Get bot_key for personal_assistant (the bot that sends reminders)
+    personal_assistant_bot = app.state.bot_manager.get_bot_by_id('personal_assistant')
+    reminder_bot_key = personal_assistant_bot.bot_key if personal_assistant_bot else config['BOT_KEY']
+
+    reminder_scheduler = create_scheduler(
+        context_dir=config['CONTEXT_DIR'],
+        campfire_url=config['CAMPFIRE_URL'],
+        bot_key=reminder_bot_key,
+        testing=os.getenv('TESTING', '').lower() == 'true'
+    )
+
+    # Start APScheduler (runs check_and_send_reminders every 1 minute)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        reminder_scheduler.check_and_send_reminders,
+        'interval',
+        minutes=1,
+        id='reminder_check',
+        name='Check and send due reminders'
+    )
+    scheduler.start()
+    app.state.scheduler = scheduler
+    app.state.reminder_scheduler = reminder_scheduler
+    print(f"[Startup] ✅ Reminder scheduler started (checks every 1 minute)")
+
+    # Start background session cleanup task (v0.5.2 - Critical memory leak fix)
+    async def cleanup_sessions_task():
+        """
+        Background task to clean up inactive sessions.
+
+        Runs every hour and removes:
+        - Expired sessions from memory
+        - Corresponding session cache files from disk
+
+        This prevents memory leaks and disk space issues from orphaned sessions.
+        """
+        while True:
+            try:
+                # Wait 1 hour
+                await asyncio.sleep(60 * 60)
+
+                # Clean up inactive sessions (TTL default: 24 hours)
+                await app.state.session_manager.cleanup_inactive_sessions()
+                print(f"[SessionManager] Cleaned up inactive sessions")
+
+            except asyncio.CancelledError:
+                print("[SessionManager] Cleanup task cancelled")
+                break
+            except Exception as e:
+                print(f"[SessionManager] Error in cleanup task: {e}")
+                # Continue running even if one iteration fails
+
+    session_cleanup_task = asyncio.create_task(cleanup_sessions_task())
+    print(f"[Startup] ✅ Session cleanup task started (runs every 1 hour)")
 
     print(f"\n[Startup] 🎯 FastAPI server ready")
     print(f"[Startup]    Database: {config['CAMPFIRE_DB_PATH']}")
     print(f"[Startup]    Campfire URL: {config['CAMPFIRE_URL']}")
     print(f"[Startup]    Session persistence: ./session_cache/")
+    print(f"[Startup]    File registry: In-memory with automatic expiry")
     print("=" * 60)
 
     yield  # Application runs here
+
+    # Cancel cleanup tasks on shutdown
+    cleanup_task.cancel()
+    session_cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await session_cleanup_task
+    except asyncio.CancelledError:
+        pass
 
     # Shutdown: Cleanup
     print("\n" + "=" * 60)
     print("🛑 Shutting down Campfire AI Bot...")
     print("=" * 60)
+
+    # Stop reminder scheduler
+    if hasattr(app.state, 'scheduler'):
+        app.state.scheduler.shutdown(wait=False)
+        print("[Shutdown] ✅ Reminder scheduler stopped")
 
     await app.state.session_manager.shutdown_all()
 
@@ -223,8 +380,8 @@ async def lifespan(app: FastAPI):
 # Create FastAPI application with lifespan management
 app = FastAPI(
     title="Campfire AI Bot",
-    description="AI-powered bot for Campfire chat using Claude Agent SDK with API fallback",
-    version="0.4.0",
+    description="AI-powered bot for Campfire chat using Claude Agent SDK with automated reminder delivery",
+    version="0.5.1",
     lifespan=lifespan
 )
 
@@ -234,7 +391,7 @@ async def health():
     """Health check endpoint"""
     return {
         'status': 'healthy',
-        'version': '0.4.0',
+        'version': '0.5.0',
         'timestamp': datetime.now().isoformat()
     }
 
@@ -290,6 +447,117 @@ async def clear_all_sessions(request: Request):
     """
     await request.app.state.session_manager.shutdown_all()
     return {"status": "success", "message": "All sessions cleared"}
+
+
+# File Download System Endpoints (v0.4.1)
+
+@app.post("/files/register")
+async def register_file(request: Request):
+    """
+    Register a file for download with UUID token.
+
+    Request body:
+        {
+            "file_path": "/tmp/presentation.html",
+            "filename": "Q3_Report.html",
+            "expiry_hours": 1,
+            "mime_type": "text/html"
+        }
+
+    Returns:
+        {
+            "success": true,
+            "token": "abc123-uuid-456def",
+            "download_url": "/files/download/abc123-uuid-456def",
+            "expires_in_hours": 1
+        }
+    """
+    try:
+        body = await request.json()
+        file_path = body.get("file_path")
+        filename = body.get("filename")
+        expiry_hours = body.get("expiry_hours", 1)
+        mime_type = body.get("mime_type", "text/html")
+
+        if not file_path or not filename:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing required fields: file_path and filename"
+            )
+
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on disk")
+
+        # Register file and get token
+        token = file_registry.register_file(
+            file_path=file_path,
+            filename=filename,
+            expiry_hours=expiry_hours,
+            mime_type=mime_type
+        )
+
+        return {
+            "success": True,
+            "token": token,
+            "download_url": f"/files/download/{token}",
+            "expires_in_hours": expiry_hours
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error registering file: {str(e)}")
+
+
+@app.get("/files/download/{token}")
+async def download_file(token: str):
+    """
+    Download file by UUID token.
+
+    Returns file if token is valid and not expired.
+    Returns 404 if token not found or expired.
+    """
+    file_info = file_registry.get_file_info(token)
+
+    if not file_info:
+        raise HTTPException(
+            status_code=404,
+            detail="File not found or link expired"
+        )
+
+    if not os.path.exists(file_info["file_path"]):
+        raise HTTPException(
+            status_code=404,
+            detail="File no longer exists on disk"
+        )
+
+    return FileResponse(
+        path=file_info["file_path"],
+        filename=file_info["filename"],
+        media_type=file_info["mime_type"]
+    )
+
+
+@app.get("/files/stats")
+async def get_file_stats():
+    """
+    Admin endpoint to view registered files.
+
+    Returns:
+        {
+            "total_files": 5,
+            "files": [
+                {
+                    "token": "abc123...",
+                    "filename": "report.html",
+                    "created_at": "2025-10-27T14:30:00",
+                    "expires_at": "2025-10-27T15:30:00"
+                },
+                ...
+            ]
+        }
+    """
+    return file_registry.get_stats()
 
 
 @app.post("/webhook")
@@ -513,17 +781,48 @@ async def process_message_async(
 
             # Process message with agent (milestone callback)
             # Returns tuple: (response_text, session_id)
-            response_text, new_session_id = await agent.process_message(
-                content=content,
-                context={
-                    'user_id': user_id,
-                    'user_name': user_name,
-                    'room_id': room_id,
-                    'room_name': room_name,
-                    'message_id': message_id
-                },
-                on_milestone=post_milestone  # NEW: Smart milestone updates
-            )
+            try:
+                response_text, new_session_id = await agent.process_message(
+                    content=content,
+                    context={
+                        'user_id': user_id,
+                        'user_name': user_name,
+                        'room_id': room_id,
+                        'room_name': room_name,
+                        'message_id': message_id
+                    },
+                    on_milestone=post_milestone  # NEW: Smart milestone updates
+                )
+            except SessionRecoveryError as e:
+                # Stale session detected - clean up and retry with fresh session
+                print(f"[Session Recovery] 🔄 Handling stale session error: {str(e)[:100]}")
+
+                # Extract session ID from agent's resume_session
+                if hasattr(agent, 'resume_session') and agent.resume_session:
+                    await session_manager.handle_invalid_session(
+                        room_id, bot_config.bot_id, agent.resume_session
+                    )
+
+                # Get fresh client (will be Tier 3 Cold Path now)
+                print(f"[Session Recovery] 🔄 Creating fresh session and retrying...")
+                client, agent = await session_manager.get_or_create_client(
+                    room_id, bot_config.bot_id, bot_config,
+                    request.app.state.tools, request.app.state.bot_manager
+                )
+
+                # Retry with fresh session
+                response_text, new_session_id = await agent.process_message(
+                    content=content,
+                    context={
+                        'user_id': user_id,
+                        'user_name': user_name,
+                        'room_id': room_id,
+                        'room_name': room_name,
+                        'message_id': message_id
+                    },
+                    on_milestone=post_milestone
+                )
+                print(f"[Session Recovery] ✅ Retry succeeded with fresh session")
 
             # Save session ID for future requests (if returned)
             if new_session_id:
@@ -567,7 +866,7 @@ if __name__ == "__main__":
     port = int(os.getenv('FASTAPI_PORT', 8000))
     host = os.getenv('FASTAPI_HOST', '0.0.0.0')
 
-    print(f"Starting Campfire AI Bot v0.4.0 on {host}:{port}")
+    print(f"Starting Campfire AI Bot v0.4.1 on {host}:{port}")
     print(f"Database: {config['CAMPFIRE_DB_PATH']}")
     print(f"Campfire URL: {config['CAMPFIRE_URL']}")
 

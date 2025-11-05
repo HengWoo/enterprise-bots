@@ -1,0 +1,84 @@
+# Personal Assistant Bot Configuration
+# v0.4.1 - File-based prompts with Skills integration
+
+bot_id: personal_assistant
+bot_key: "10-vWgb0YVbUSYs"
+name: 个人助手
+display_name: 个人助手 (Personal Assistant)
+description: Personal productivity assistant for tasks, reminders, notes, and document processing
+
+# Model Configuration
+model_config:
+  model: claude-haiku-4-5-20251001
+  temperature: 0.7
+  max_tokens: 4096
+  thinking:
+    enabled: false
+    budget_tokens: 0
+
+# File-based System Prompt (v0.4.1 NEW)
+# Prompt file: prompts/bots/personal_assistant.md
+# Template variables: $current_date, $user_name, $room_name
+system_prompt_file: personal_assistant.md
+
+# MCP Servers
+mcp_servers:
+  - campfire
+  # skills removed - using native Agent SDK skills (v0.5.0)
+
+# Tools Configuration (Config-Driven Architecture v0.4.0)
+tools:
+  builtin:
+    - WebSearch
+    - WebFetch
+    - Read
+    - Grep
+    - Glob
+    - Task
+    - Bash
+    - Skill  # v0.5.0: Native Agent SDK skills
+
+  campfire:
+    - search_conversations
+    - get_user_context
+    - save_user_preference
+    - manage_personal_tasks
+    - set_reminder
+    - save_personal_note
+    - search_personal_notes
+    - save_html_presentation
+    - save_file  # v0.5.2: Universal file saving (PPTX, DOCX, XLSX, PDF, etc.)
+
+  # skills section removed - native "Skill" tool replaces mcp__skills__load_skill (v0.5.0)
+
+# Language Settings
+languages:
+  - zh-CN
+  - en
+default_language: zh-CN
+
+# Bot Capabilities
+capabilities:
+  file_analysis: true
+  conversation_memory: true
+  user_personalization: true
+  knowledge_base_access: false
+  personal_productivity: true
+  skills_progressive_disclosure: true
+  docx_support: true
+  pdf_support: true
+  image_support: true
+  xlsx_support: false
+  pptx_support: true
+
+# Bot Settings
+settings:
+  max_context_messages: 10
+  enable_markdown: true
+  enable_citations: false
+  response_style: friendly
+
+# Backwards Compatibility (v0.4.1 Migration)
+# This bot is the PILOT for file-based prompt migration.
+# Old system_prompt field is now in: prompts/bots/personal_assistant.md
+# Keep JSON config as backup during migration.

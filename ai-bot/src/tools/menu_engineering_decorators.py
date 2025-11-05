@@ -69,27 +69,42 @@ async def get_menu_profitability_tool(args):
             min_quantity=min_quantity
         )
 
-        if result["success"]:
-            # Format data for display
-            import json
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Menu Profitability Analysis\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
-                }]
+        if result["success"] and result.get("data"):
+            data = result["data"]
+            response_text = "🎯 **菜单盈利能力分析（波士顿矩阵）**\n\n"
+
+            # Group by category
+            categories = {
+                "stars": ("⭐ 明星菜品", "高利润+高销量，重点推广"),
+                "puzzles": ("🧩 谜题菜品", "高利润+低销量，加强营销"),
+                "plowhorses": ("🐴 主力菜品", "低利润+高销量，考虑提价"),
+                "dogs": ("🐕 问题菜品", "低利润+低销量，建议下架")
             }
+
+            for cat_key, (cat_name, cat_desc) in categories.items():
+                dishes = data.get(cat_key, [])
+                if dishes:
+                    response_text += f"**{cat_name}** ({cat_desc})\n"
+                    for dish in dishes[:5]:  # Show top 5 in each category
+                        response_text += f"  • {dish.get('dish_name', 'Unknown')}\n"
+                        response_text += f"    销量: {dish.get('quantity', 0)} | 利润: ¥{dish.get('profit', 0):,.2f}\n"
+                    if len(dishes) > 5:
+                        response_text += f"  ...还有 {len(dishes) - 5} 道菜\n"
+                    response_text += "\n"
         else:
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Error: {result['message']}"
-                }]
-            }
+            response_text = f"未找到菜单数据。{result.get('message', '')}"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
     except Exception as e:
         return {
             "content": [{
                 "type": "text",
-                "text": f"Error calling menu profitability tool: {str(e)}"
+                "text": f"菜单盈利分析失败：{str(e)}"
             }]
         }
 
@@ -133,21 +148,44 @@ async def get_top_profitable_dishes_tool(args):
             top_n=top_n
         )
 
-        if result["success"]:
-            import json
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Top {top_n} Profitable Dishes\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
-                }]
-            }
+        if result.get("success") and result.get("data"):
+            dishes = result["data"]
+            response_text = f"💰 **最赚钱的菜品 TOP {top_n}**\n\n"
+
+            for i, dish in enumerate(dishes, 1):
+                # Medal for top 3
+                if i == 1:
+                    medal = "🥇"
+                elif i == 2:
+                    medal = "🥈"
+                elif i == 3:
+                    medal = "🥉"
+                else:
+                    medal = f"{i}."
+
+                response_text += f"{medal} **{dish.get('dish_name', 'Unknown')}**\n"
+                response_text += f"   销量: {dish.get('quantity', 0)} 份\n"
+                response_text += f"   营业额: ¥{dish.get('revenue', 0):,.2f}\n"
+                response_text += f"   成本: ¥{dish.get('cost', 0):,.2f}\n"
+                response_text += f"   毛利润: ¥{dish.get('profit', 0):,.2f}\n"
+
+                # Calculate margin if we have the data
+                if dish.get('revenue', 0) > 0:
+                    margin = (dish.get('profit', 0) / dish.get('revenue', 1)) * 100
+                    response_text += f"   毛利率: {margin:.1f}%\n"
+
+                response_text += "\n"
+        elif result.get("success"):
+            response_text = f"未找到盈利菜品数据。{result.get('message', '')}"
         else:
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Error: {result['message']}"
-                }]
-            }
+            response_text = f"查询失败：{result.get('message', '未知错误')}"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
     except Exception as e:
         return {
             "content": [{
@@ -196,21 +234,45 @@ async def get_low_profit_dishes_tool(args):
             bottom_n=bottom_n
         )
 
-        if result["success"]:
-            import json
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Bottom {bottom_n} Low Profit Dishes\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
-                }]
-            }
+        if result.get("success") and result.get("data"):
+            dishes = result["data"]
+            response_text = f"⚠️ **低利润菜品分析 (需要关注的 {bottom_n} 道菜)**\n\n"
+
+            for i, dish in enumerate(dishes, 1):
+                response_text += f"{i}. **{dish.get('dish_name', 'Unknown')}**\n"
+                response_text += f"   销量: {dish.get('quantity', 0)} 份\n"
+                response_text += f"   营业额: ¥{dish.get('revenue', 0):,.2f}\n"
+                response_text += f"   成本: ¥{dish.get('cost', 0):,.2f}\n"
+                response_text += f"   毛利润: ¥{dish.get('profit', 0):,.2f}\n"
+
+                # Calculate margin
+                if dish.get('revenue', 0) > 0:
+                    margin = (dish.get('profit', 0) / dish.get('revenue', 1)) * 100
+                    response_text += f"   毛利率: {margin:.1f}%\n"
+
+                # Add recommendation
+                recommendation = dish.get('recommendation', '')
+                if recommendation:
+                    response_text += f"   💡 建议: {recommendation}\n"
+                elif dish.get('profit', 0) < 0:
+                    response_text += f"   💡 建议: ❌ 亏损菜品，建议下架\n"
+                elif margin < 20:
+                    response_text += f"   💡 建议: 📈 利润率过低，考虑提价或降成本\n"
+                else:
+                    response_text += f"   💡 建议: 🔍 需要进一步分析\n"
+
+                response_text += "\n"
+        elif result.get("success"):
+            response_text = f"未找到低利润菜品数据。{result.get('message', '')}"
         else:
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Error: {result['message']}"
-                }]
-            }
+            response_text = f"查询失败：{result.get('message', '未知错误')}"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
     except Exception as e:
         return {
             "content": [{
@@ -256,21 +318,52 @@ async def get_cost_coverage_rate_tool(args):
             end_date=end_date
         )
 
-        if result["success"]:
-            import json
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Cost Data Coverage Analysis\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
-                }]
-            }
+        if result.get("success") and result.get("data"):
+            data = result["data"]
+            response_text = "📊 **成本数据覆盖率分析**\n\n"
+
+            # Coverage statistics
+            total_dishes = data.get('total_dishes', 0)
+            with_cost = data.get('dishes_with_cost', 0)
+            without_cost = data.get('dishes_without_cost', 0)
+            coverage_rate = data.get('coverage_rate', 0)
+
+            response_text += f"**数据完整性：**\n"
+            response_text += f"✅ 有成本数据: {with_cost} 道菜\n"
+            response_text += f"❌ 缺少成本数据: {without_cost} 道菜\n"
+            response_text += f"📈 覆盖率: {coverage_rate:.1f}%\n\n"
+
+            # Revenue impact
+            total_revenue = data.get('total_revenue', 0)
+            revenue_with_cost = data.get('revenue_with_cost', 0)
+            revenue_without_cost = data.get('revenue_without_cost', 0)
+
+            if total_revenue > 0:
+                revenue_coverage = (revenue_with_cost / total_revenue) * 100
+                response_text += f"**营业额影响：**\n"
+                response_text += f"✅ 有成本数据的菜品营业额: ¥{revenue_with_cost:,.2f}\n"
+                response_text += f"❌ 无成本数据的菜品营业额: ¥{revenue_without_cost:,.2f}\n"
+                response_text += f"📊 营业额覆盖率: {revenue_coverage:.1f}%\n\n"
+
+            # Assessment
+            if coverage_rate >= 80:
+                response_text += "✅ **评估**: 成本数据覆盖率良好\n"
+            elif coverage_rate >= 60:
+                response_text += "⚠️ **评估**: 成本数据覆盖率中等，建议补充高营业额菜品的成本信息\n"
+            else:
+                response_text += "❌ **评估**: 成本数据覆盖率较低，影响盈利分析准确性，建议优先补充\n"
+
+        elif result.get("success"):
+            response_text = f"未找到成本覆盖率数据。{result.get('message', '')}"
         else:
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Error: {result['message']}"
-                }]
-            }
+            response_text = f"查询失败：{result.get('message', '未知错误')}"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
     except Exception as e:
         return {
             "content": [{
@@ -319,21 +412,52 @@ async def get_dishes_missing_cost_tool(args):
             top_n=top_n
         )
 
-        if result["success"]:
-            import json
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Top {top_n} Dishes Missing Cost Data\n\n{json.dumps(result['data'], ensure_ascii=False, indent=2)}"
-                }]
-            }
+        if result.get("success") and result.get("data"):
+            dishes = result["data"]
+            response_text = f"⚠️ **缺少成本数据的菜品 (优先级排序 TOP {top_n})**\n\n"
+            response_text += "💡 **提示**: 按营业额排序，优先补充高营业额菜品的成本数据\n\n"
+
+            for i, dish in enumerate(dishes, 1):
+                # Priority indicator
+                if i <= 5:
+                    priority = "🔴 高优先级"
+                elif i <= 10:
+                    priority = "🟡 中优先级"
+                else:
+                    priority = "🟢 低优先级"
+
+                response_text += f"{i}. **{dish.get('dish_name', 'Unknown')}** ({priority})\n"
+                response_text += f"   销量: {dish.get('quantity', 0)} 份\n"
+                response_text += f"   营业额: ¥{dish.get('revenue', 0):,.2f}\n"
+                response_text += f"   平均单价: ¥{dish.get('avg_price', 0):,.2f}\n"
+
+                # Impact assessment
+                revenue = dish.get('revenue', 0)
+                if revenue > 10000:
+                    response_text += f"   📊 影响: 高营业额菜品，急需补充成本数据\n"
+                elif revenue > 5000:
+                    response_text += f"   📊 影响: 中等营业额菜品，建议补充成本数据\n"
+                else:
+                    response_text += f"   📊 影响: 营业额较低，可稍后补充\n"
+
+                response_text += "\n"
+
+            # Summary
+            total_missing_revenue = sum(dish.get('revenue', 0) for dish in dishes)
+            response_text += f"**汇总：**\n"
+            response_text += f"缺少成本数据的菜品总营业额: ¥{total_missing_revenue:,.2f}\n"
+
+        elif result.get("success"):
+            response_text = "✅ 所有菜品都有成本数据，无需补充。"
         else:
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": f"Error: {result['message']}"
-                }]
-            }
+            response_text = f"查询失败：{result.get('message', '未知错误')}"
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": response_text
+            }]
+        }
     except Exception as e:
         return {
             "content": [{

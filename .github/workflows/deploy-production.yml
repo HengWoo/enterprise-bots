@@ -1,0 +1,237 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v0.4.1 or latest)'
+        required: true
+        type: string
+        default: 'latest'
+      skip_backup:
+        description: 'Skip database backup'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    name: Deploy to DigitalOcean Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://chat.smartice.ai
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DO_SSH_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DO_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Verify server connectivity
+        run: |
+          echo "Testing SSH connection to production server..."
+          ssh ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }} "echo '✅ SSH connection successful'"
+
+      - name: Backup current deployment (optional)
+        if: ${{ !inputs.skip_backup }}
+        run: |
+          echo "Creating backup of current deployment..."
+          ssh ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }} << 'ENDSSH'
+            set -e
+
+            # Backup directory
+            BACKUP_DIR="/root/backups/deployments/$(date +%Y%m%d_%H%M%S)"
+            mkdir -p "$BACKUP_DIR"
+
+            # Backup AI knowledge base
+            if [ -d "/root/ai-knowledge" ]; then
+              echo "Backing up AI knowledge base..."
+              tar -czf "$BACKUP_DIR/ai-knowledge.tar.gz" /root/ai-knowledge/
+            fi
+
+            # Backup AI service configuration
+            if [ -d "/root/ai-service" ]; then
+              echo "Backing up AI service config..."
+              tar -czf "$BACKUP_DIR/ai-service-config.tar.gz" /root/ai-service/
+            fi
+
+            echo "✅ Backup created at: $BACKUP_DIR"
+            ls -lh "$BACKUP_DIR"
+          ENDSSH
+
+      - name: Pull Docker image
+        run: |
+          echo "Pulling Docker image: hengwoo/campfire-ai-bot:${{ inputs.version }}"
+          ssh ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }} << 'ENDSSH'
+            set -e
+            docker pull hengwoo/campfire-ai-bot:${{ inputs.version }}
+            echo "✅ Image pulled successfully"
+            docker images | grep campfire-ai-bot
+          ENDSSH
+
+      - name: Deploy AI Bot service
+        run: |
+          echo "Deploying AI Bot service..."
+          ssh ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }} << 'ENDSSH'
+            set -e
+
+            cd /root/ai-service
+
+            # Update docker-compose.yml with new image tag
+            if [ "${{ inputs.version }}" != "latest" ]; then
+              sed -i 's|image: hengwoo/campfire-ai-bot:.*|image: hengwoo/campfire-ai-bot:${{ inputs.version }}|' docker-compose.yml
+            fi
+
+            # Stop current container
+            echo "Stopping current container..."
+            docker-compose down
+
+            # Start new container
+            echo "Starting new container..."
+            docker-compose up -d
+
+            # Wait for container to be ready
+            echo "Waiting for container to start..."
+            sleep 15
+
+            echo "✅ Deployment complete"
+          ENDSSH
+
+      - name: Health check
+        run: |
+          echo "Running health check..."
+          ssh ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }} << 'ENDSSH'
+            set -e
+
+            # Check container is running
+            if ! docker ps | grep -q campfire-ai-bot; then
+              echo "❌ Container is not running"
+              echo "Recent logs:"
+              docker logs --tail 50 campfire-ai-bot
+              exit 1
+            fi
+
+            # Check health endpoint
+            for i in {1..10}; do
+              if curl -f http://localhost:5000/health > /dev/null 2>&1; then
+                echo "✅ Health check passed"
+                curl http://localhost:5000/health
+                exit 0
+              fi
+              echo "Attempt $i failed, retrying in 5 seconds..."
+              sleep 5
+            done
+
+            echo "❌ Health check failed after 10 attempts"
+            echo "Recent logs:"
+            docker logs --tail 50 campfire-ai-bot
+            exit 1
+          ENDSSH
+
+      - name: Verify bot response
+        run: |
+          echo "Verifying bot can respond..."
+          ssh ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }} << 'ENDSSH'
+            set -e
+
+            # Test webhook endpoint
+            curl -X POST http://localhost:5000/webhook/default \
+              -H "Content-Type: application/json" \
+              -d '{
+                "creator": {"id": 999, "name": "CI/CD Test"},
+                "room": {"id": 999, "name": "Deployment Test"},
+                "content": "Health check from GitHub Actions deployment"
+              }' > /dev/null 2>&1
+
+            # Check logs for response
+            sleep 5
+            if docker logs --tail 20 campfire-ai-bot | grep -q "Processing webhook"; then
+              echo "✅ Bot is responding to webhooks"
+            else
+              echo "⚠️  Bot may not be responding correctly"
+              echo "Check logs manually if needed"
+            fi
+          ENDSSH
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "=========================================="
+          echo "✅ Deployment Successful!"
+          echo "=========================================="
+          echo ""
+          echo "Version deployed: ${{ inputs.version }}"
+          echo "Production URL: https://chat.smartice.ai"
+          echo "Deployment time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo ""
+          echo "Next steps:"
+          echo "  1. Monitor logs:"
+          echo "     ssh root@${{ secrets.DO_HOST }}"
+          echo "     docker logs -f campfire-ai-bot"
+          echo ""
+          echo "  2. Test bots in Campfire:"
+          echo "     https://chat.smartice.ai"
+          echo ""
+          echo "  3. Monitor for 24-48 hours"
+          echo ""
+          echo "=========================================="
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "=========================================="
+          echo "❌ Deployment Failed - Attempting Rollback"
+          echo "=========================================="
+
+          ssh ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }} << 'ENDSSH'
+            set -e
+
+            cd /root/ai-service
+
+            # Stop failed deployment
+            docker-compose down
+
+            # Pull previous stable version (if v0.4.0.2 is stable)
+            echo "Pulling previous stable version..."
+            docker pull hengwoo/campfire-ai-bot:v0.4.0.2
+
+            # Update docker-compose to use stable version
+            sed -i 's|image: hengwoo/campfire-ai-bot:.*|image: hengwoo/campfire-ai-bot:v0.4.0.2|' docker-compose.yml
+
+            # Start stable version
+            docker-compose up -d
+
+            echo "✅ Rolled back to v0.4.0.2"
+          ENDSSH
+
+          echo ""
+          echo "Rollback complete. Please investigate deployment failure."
+          echo "Check logs and retry deployment after fixing issues."
+          echo ""
+
+      - name: Notify deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}';
+            const emoji = status === 'success' ? '✅' : '❌';
+            const message = status === 'success'
+              ? 'Deployment successful!'
+              : 'Deployment failed. Check logs for details.';
+
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `## ${emoji} Production Deployment\n\n**Status:** ${message}\n\n**Version:** ${{ inputs.version }}\n\n**Workflow:** [View logs](${context.payload.repository.html_url}/actions/runs/${context.runId})\n\n---\n🤖 Generated by GitHub Actions`
+            });

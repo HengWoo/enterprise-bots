@@ -1,0 +1,87 @@
+# Operations Assistant Bot Configuration
+# v0.5.2 - File-based prompts migration (5th bot)
+
+bot_id: operations_assistant
+bot_key: "TBD"  # To be assigned in production
+name: 运营数据助手
+display_name: 运营数据助手 (Operations Assistant)
+description: Restaurant operations analytics with STAR framework, Supabase RPC tools, and KPI interpretation
+
+# Model Configuration
+model_config:
+  model: claude-haiku-4-5-20251001
+  temperature: 0.7
+  max_tokens: 8192
+  thinking:
+    enabled: false
+    budget_tokens: 0
+
+# File-based System Prompt (v0.5.2)
+# Prompt file: prompts/bots/operations_assistant.md
+# Template variables: $current_date, $user_name, $room_name
+system_prompt_file: operations_assistant.md
+
+# MCP Servers
+mcp_servers:
+  - campfire
+
+# Tools Configuration (Config-Driven Architecture v0.4.0)
+tools:
+  builtin:
+    - WebSearch
+    - WebFetch
+    - Read
+    - Grep
+    - Glob
+    - Task
+    - Skill  # v0.5.0: Native Agent SDK skills (plugin + custom)
+
+  campfire:
+    - search_conversations
+    - get_user_context
+    - save_user_preference
+    - query_operations_data
+    - get_operations_summary
+    - get_daily_revenue
+    - get_revenue_by_zone
+    - get_top_dishes
+    - get_station_performance
+    - get_hourly_revenue
+    - get_table_turnover
+    - get_return_analysis
+    - get_order_type_distribution
+    - get_revenue_trend
+    - get_quick_stats
+    - save_html_presentation  # v0.4.1: HTML presentations (was in JSON, missing in YAML)
+    - save_file  # v0.5.2: Universal file saving (analytics exports, operational reports)
+
+# Language Settings
+languages:
+  - zh-CN
+  - en
+default_language: zh-CN
+
+# Bot Capabilities
+capabilities:
+  file_analysis: false
+  conversation_memory: true
+  user_personalization: true
+  knowledge_base_access: false
+  operations_analytics: true
+  star_framework: true
+  supabase_queries: true
+  kpi_analysis: true
+
+# Bot Settings
+settings:
+  max_context_messages: 30
+  enable_markdown: true
+  enable_citations: true
+  response_style: analytical
+
+# Migration Notes (v0.5.2)
+# This is the 5th bot to use file-based prompts.
+# Old system_prompt field is now in: prompts/bots/operations_assistant.md
+# JSON config backup: bots/operations_assistant.json
+# Key change: References Skill("operations-analytics") for detailed STAR framework and RPC tools documentation
+# Prompt size reduced by ~70% (9,158 chars → ~3,000 chars) via skill extraction

@@ -1,12 +1,24 @@
 """
 Bot Configuration Manager
-Loads and manages multiple bot configurations from JSON files
+Loads and manages multiple bot configurations from JSON and YAML files
+
+v0.4.1 Enhancement:
+- Support for YAML configuration files (prompts/configs/*.yaml)
+- Backwards compatible with existing JSON files (bots/*.json)
+- File-based prompt integration (bot personality in separate .md files)
 """
 
 import json
 import os
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
+
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    YAML_AVAILABLE = False
+    print("[BotManager] ⚠️  PyYAML not installed - YAML configs not available")
 
 
 class BotConfig:
@@ -19,8 +31,13 @@ class BotConfig:
         Args:
             config_data: Dictionary containing bot configuration
         """
+        import os
+
         self.bot_id = config_data.get('bot_id', 'default')
-        self.bot_key = config_data.get('bot_key')
+
+        # Check for environment variable override first (for local testing)
+        env_var_name = f"BOT_KEY_{self.bot_id.upper()}"
+        self.bot_key = os.getenv(env_var_name, config_data.get('bot_key'))
         self.name = config_data.get('name', 'AI Assistant')
         self.display_name = config_data.get('display_name', self.name)
         self.description = config_data.get('description', '')
@@ -37,6 +54,9 @@ class BotConfig:
 
         # System prompt
         self.system_prompt = config_data.get('system_prompt', '')
+
+        # v0.4.1: File-based prompts support
+        self.system_prompt_file = config_data.get('system_prompt_file')
 
         # Tools and capabilities
         # v0.4.0: New structure with mcp_servers and tools dict
@@ -72,6 +92,7 @@ class BotConfig:
             'thinking_enabled': self.thinking_enabled,
             'thinking_budget': self.thinking_budget,
             'system_prompt': self.system_prompt,
+            'system_prompt_file': self.system_prompt_file,  # v0.4.1: File-based prompts
             'mcp_servers': self.mcp_servers,
             'tools': self.tools,
             'tools_enabled': self.tools_enabled,  # Legacy, kept for compatibility
@@ -85,14 +106,19 @@ class BotConfig:
 class BotManager:
     """Manages multiple bot configurations"""
 
-    def __init__(self, bots_dir: str = './bots'):
+    def __init__(self, bots_dirs: List[str] = None):
         """
         Initialize BotManager
 
         Args:
-            bots_dir: Directory containing bot configuration JSON files
+            bots_dirs: List of directories to search for bot configs
+                      Default: ['./bots', 'prompts/configs']
+                      Supports both JSON and YAML files
         """
-        self.bots_dir = Path(bots_dir)
+        if bots_dirs is None:
+            bots_dirs = ['./bots', 'prompts/configs']
+
+        self.bots_dirs = [Path(d) for d in bots_dirs]
         self.bots: Dict[str, BotConfig] = {}
         self.bots_by_key: Dict[str, BotConfig] = {}
         self.default_bot: Optional[BotConfig] = None
@@ -100,28 +126,53 @@ class BotManager:
         self._load_all_bots()
 
     def _load_all_bots(self):
-        """Load all bot configurations from JSON files"""
-        if not self.bots_dir.exists():
-            print(f"Warning: Bots directory not found: {self.bots_dir}")
-            print("Creating directory and loading default bot only")
-            self.bots_dir.mkdir(parents=True, exist_ok=True)
+        """
+        Load all bot configurations from JSON and YAML files.
+
+        Searches multiple directories:
+        - ./bots/*.json (legacy JSON configs)
+        - prompts/configs/*.yaml (new YAML configs)
+
+        YAML files take precedence over JSON if both exist for same bot_id.
+        """
+        config_files = []
+
+        # Collect all config files from all directories
+        for bots_dir in self.bots_dirs:
+            if not bots_dir.exists():
+                print(f"[BotManager] ⚠️  Config directory not found: {bots_dir}")
+                continue
+
+            # Find JSON files
+            json_files = list(bots_dir.glob('*.json'))
+            config_files.extend([(f, 'json') for f in json_files])
+
+            # Find YAML files (if PyYAML available)
+            if YAML_AVAILABLE:
+                yaml_files = list(bots_dir.glob('*.yaml'))
+                yaml_files.extend(bots_dir.glob('*.yml'))
+                config_files.extend([(f, 'yaml') for f in yaml_files])
+
+        if not config_files:
+            print("[BotManager] ⚠️  No bot configurations found in any directory")
+            print("[BotManager] Loading default bot only")
             self._load_default_bot()
             return
 
-        # Load all JSON files in bots directory
-        json_files = list(self.bots_dir.glob('*.json'))
-
-        if not json_files:
-            print(f"Warning: No bot configurations found in {self.bots_dir}")
-            self._load_default_bot()
-            return
-
-        for json_file in json_files:
+        # Load each config file
+        for config_file, file_type in config_files:
             try:
-                with open(json_file, 'r', encoding='utf-8') as f:
-                    config_data = json.load(f)
+                config_data = self._load_config_file(config_file, file_type)
+
+                if not config_data:
+                    continue
 
                 bot_config = BotConfig(config_data)
+
+                # YAML files override JSON for same bot_id
+                if bot_config.bot_id in self.bots and file_type == 'yaml':
+                    print(f"[BotManager] 🔄 YAML config overrides JSON for: {bot_config.bot_id}")
+
                 self.bots[bot_config.bot_id] = bot_config
 
                 # Index by bot_key if available
@@ -132,16 +183,41 @@ class BotManager:
                 if bot_config.bot_id == 'default':
                     self.default_bot = bot_config
 
-                print(f"Loaded bot: {bot_config.display_name} ({bot_config.bot_id})")
+                file_type_label = file_type.upper()
+                print(f"[BotManager] ✅ Loaded {file_type_label}: {bot_config.display_name} ({bot_config.bot_id})")
 
             except Exception as e:
-                print(f"Error loading bot config from {json_file}: {e}")
+                print(f"[BotManager] ❌ Error loading config from {config_file}: {e}")
 
         # Ensure we have a default bot
         if not self.default_bot and self.bots:
             # Use first bot as default
             self.default_bot = list(self.bots.values())[0]
-            print(f"Using {self.default_bot.display_name} as default bot")
+            print(f"[BotManager] Using {self.default_bot.display_name} as default bot")
+
+    def _load_config_file(self, config_file: Path, file_type: str) -> Optional[Dict[str, Any]]:
+        """
+        Load configuration from JSON or YAML file.
+
+        Args:
+            config_file: Path to config file
+            file_type: 'json' or 'yaml'
+
+        Returns:
+            Configuration dictionary or None if loading fails
+        """
+        try:
+            with open(config_file, 'r', encoding='utf-8') as f:
+                if file_type == 'json':
+                    return json.load(f)
+                elif file_type == 'yaml' and YAML_AVAILABLE:
+                    return yaml.safe_load(f)
+                else:
+                    return None
+
+        except Exception as e:
+            print(f"[BotManager] ❌ Error reading {file_type} file {config_file}: {e}")
+            return None
 
     def _load_default_bot(self):
         """Load a minimal default bot configuration"""
@@ -213,10 +289,53 @@ class BotManager:
             for bot_id, bot in self.bots.items()
         }
 
+    def load_bot_config(self, bot_id: str) -> Optional[BotConfig]:
+        """
+        Load a single bot configuration on-demand.
+
+        Searches all configured directories for bot config file.
+        Useful for loading bot configs dynamically.
+
+        Args:
+            bot_id: Bot identifier
+
+        Returns:
+            BotConfig if found, None otherwise
+        """
+        # Check if already loaded
+        if bot_id in self.bots:
+            return self.bots[bot_id]
+
+        # Search for config file
+        for bots_dir in self.bots_dirs:
+            if not bots_dir.exists():
+                continue
+
+            # Try YAML first (if available)
+            if YAML_AVAILABLE:
+                yaml_file = bots_dir / f"{bot_id}.yaml"
+                if yaml_file.exists():
+                    config_data = self._load_config_file(yaml_file, 'yaml')
+                    if config_data:
+                        bot_config = BotConfig(config_data)
+                        self.bots[bot_id] = bot_config
+                        return bot_config
+
+            # Try JSON
+            json_file = bots_dir / f"{bot_id}.json"
+            if json_file.exists():
+                config_data = self._load_config_file(json_file, 'json')
+                if config_data:
+                    bot_config = BotConfig(config_data)
+                    self.bots[bot_id] = bot_config
+                    return bot_config
+
+        return None
+
     def reload_bots(self):
         """Reload all bot configurations from disk"""
         self.bots.clear()
         self.bots_by_key.clear()
         self.default_bot = None
         self._load_all_bots()
-        print("Bot configurations reloaded")
+        print("[BotManager] Bot configurations reloaded")

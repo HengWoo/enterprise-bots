@@ -5,10 +5,13 @@ Provides consolidated tools for conversation search, user context, and knowledge
 
 import sqlite3
 import json
+import logging
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional, Any
 import re
+
+logger = logging.getLogger(__name__)
 
 
 class CampfireTools:
@@ -598,7 +601,7 @@ class CampfireTools:
         Store new document to knowledge base.
 
         Args:
-            category: Document category ('policies', 'procedures', 'technical', 'financial')
+            category: Document category (any string, will be normalized to kebab-case)
             title: Document title
             content: Markdown content
             author: Optional author name
@@ -606,17 +609,30 @@ class CampfireTools:
         Returns:
             Dict with keys: success, path, message
         """
-        # Validate category
-        valid_categories = ["policies", "procedures", "technical", "financial"]
-        if category not in valid_categories:
+        # Normalize category to kebab-case for filesystem compatibility
+        # Accepts any input: "Strategic Planning" → "strategic-planning"
+        normalized_category = category.lower()
+        normalized_category = re.sub(r'[^\w\s-]', '', normalized_category)  # Remove special chars
+        normalized_category = re.sub(r'[-\s]+', '-', normalized_category)   # Replace spaces/hyphens with single hyphen
+        normalized_category = normalized_category.strip('-')
+
+        if not normalized_category:
+            logger.error(f"[KB] Invalid category after normalization: '{category}'")
             return {
                 "success": False,
-                "message": f"Invalid category. Must be one of: {', '.join(valid_categories)}"
+                "message": f"Invalid category: '{category}' - cannot be empty after normalization"
             }
 
         # Create category directory if it doesn't exist
-        category_dir = self.knowledge_base_dir / category
-        category_dir.mkdir(parents=True, exist_ok=True)
+        category_dir = self.knowledge_base_dir / normalized_category
+        try:
+            category_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.error(f"[KB] Failed to create category directory '{normalized_category}': {str(e)}")
+            return {
+                "success": False,
+                "message": f"Failed to create category directory: {str(e)}"
+            }
 
         # Generate filename from title (kebab-case)
         filename = title.lower()
@@ -628,10 +644,11 @@ class CampfireTools:
 
         # Check if file already exists
         if file_path.exists():
+            logger.warning(f"[KB] Document already exists: {normalized_category}/{filename}")
             return {
                 "success": False,
-                "message": f"Document already exists: {category}/{filename}",
-                "path": f"{category}/{filename}"
+                "message": f"Document already exists: {normalized_category}/{filename}",
+                "path": f"{normalized_category}/{filename}"
             }
 
         # Prepare content with metadata header
@@ -639,7 +656,8 @@ class CampfireTools:
         full_content = f"""# {title}
 
 **Last Updated:** {current_date}
-**Category:** {category.capitalize()}
+**Category:** {normalized_category}
+**Original Category:** {category}
 """
 
         if author:
@@ -652,14 +670,16 @@ class CampfireTools:
 
         try:
             file_path.write_text(full_content, encoding="utf-8")
+            logger.info(f"[KB] ✅ Document created: {normalized_category}/{filename} (original category: '{category}')")
 
             return {
                 "success": True,
-                "path": f"{category}/{filename}",
-                "message": f"Document created successfully at: {category}/{filename}"
+                "path": f"{normalized_category}/{filename}",
+                "message": f"Document created successfully at: {normalized_category}/{filename} (original category: '{category}')"
             }
 
         except Exception as e:
+            logger.error(f"[KB] ❌ Failed to create document '{normalized_category}/{filename}': {str(e)}")
             return {
                 "success": False,
                 "message": f"Error creating document: {str(e)}"
@@ -1268,7 +1288,7 @@ class CampfireTools:
             "success": True,
             "message": f"Reminder #{reminder['id']} set for {remind_at}",
             "reminder": reminder,
-            "note": "⚠️ Note: Automated reminder delivery not yet implemented. This stores the reminder for manual review."
+            "note": "✅ Reminder will be automatically delivered at the scheduled time (v0.5.1)"
         }
 
     def save_personal_note(

@@ -1,0 +1,155 @@
+# ============================================================================
+# Local Testing Environment - Simplified Setup
+# ============================================================================
+# Runs Campfire + AI Bot for local testing with 100% production fidelity.
+#
+# Campfire includes built-in Redis (started via bin/boot Procfile):
+#   - Web server (Rails)
+#   - Redis server (ActionCable + background jobs)
+#   - Workers (Resque)
+#
+# Usage:
+#   docker-compose -f docker-compose.dev.yml up --build
+#   Open browser: http://localhost:3000
+#
+# Author: Claude AI Assistant
+# Date: 2025-10-28
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # Campfire - Real Rails application (37signals ONCE)
+  # Includes: Web + Redis + Workers (via bin/boot)
+  # ==========================================================================
+  campfire:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: campfire-dev
+    ports:
+      - "3000:80"  # Access at http://localhost:3000
+    environment:
+      # Rails environment - Use production mode (matches deployment)
+      # RAILS_ENV is already set to "production" in Dockerfile
+
+      # Database (SQLite)
+      - DATABASE_URL=sqlite3:storage/db/production.sqlite3
+
+      # Security (use dummy key for dev)
+      - SECRET_KEY_BASE=dev_secret_key_base_not_for_production_use_only
+
+      # Disable HTTPS requirement for local testing (Campfire's custom variable)
+      - DISABLE_SSL=true
+
+      # ActionCable (WebSocket) configuration
+      - ACTION_CABLE_URL=ws://localhost:3000/cable
+
+      # File storage
+      - ACTIVE_STORAGE_SERVICE=local
+    volumes:
+      # Persist database and uploaded files
+      - ./storage:/rails/storage
+
+      # Persist logs for debugging
+      - ./log:/rails/log
+
+      # Redis config (used by internal Redis server)
+      - ./config/redis.conf:/rails/config/redis.conf:ro
+    command: bin/boot  # Starts web + redis + workers
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ==========================================================================
+  # AI Bot Service - FastAPI + Claude Agent SDK
+  # ==========================================================================
+  ai-bot:
+    build:
+      context: ./ai-bot
+      dockerfile: Dockerfile
+    container_name: campfire-ai-bot-dev
+    ports:
+      - "8000:8000"  # Access at http://localhost:8000
+
+    # Load environment from .env file (shared config)
+    # Then .env.local for local overrides (bot keys, URLs)
+    env_file:
+      - ./ai-bot/.env
+      - ./ai-bot/.env.local
+
+    environment:
+      # Campfire connection (internal Docker network)
+      - CAMPFIRE_URL=http://campfire:80
+
+      # Database access (read-only)
+      - CAMPFIRE_DB_PATH=/campfire-db/production.sqlite3
+
+      # IMPORTANT: Set to false for real integration testing!
+      - TESTING=false
+
+      # Knowledge base directory
+      - KNOWLEDGE_BASE_DIR=/app/ai-knowledge
+
+      # User context storage (within knowledge base)
+      - CONTEXT_DIR=/app/ai-knowledge/user_contexts
+
+      # Skills MCP directory
+      - SKILLS_DIR=/app/.claude/skills
+
+      # File saving configuration (v0.4.1)
+      - FILE_TEMP_DIR=/tmp
+
+      # File download base URL (external, browser-accessible)
+      # Local dev: http://localhost:8000
+      # Production: https://chat.smartice.ai/ai-bot
+      - FILE_DOWNLOAD_BASE_URL=http://localhost:8000
+
+    # Note: The following come from .env.local file:
+    # - ANTHROPIC_BASE_URL (HusanAI endpoint)
+    # - ANTHROPIC_API_KEY (HusanAI key)
+    # - ANTHROPIC_BASE_URL_FALLBACK (Official Anthropic)
+    # - ANTHROPIC_API_KEY_FALLBACK (Official Anthropic key)
+    # - FALLBACK_MODEL
+    # - SUPABASE_URL
+    # - SUPABASE_KEY
+    # - LOG_LEVEL
+    volumes:
+      # Read-only access to Campfire database
+      - ./storage/db:/campfire-db:ro
+
+      # Read-only access to Campfire uploaded files
+      - ./storage/files:/campfire-files:ro
+
+      # Persistent AI knowledge base
+      - ./ai-bot/ai-knowledge:/app/ai-knowledge
+
+      # Session cache
+      - ./ai-bot/session_cache:/app/session_cache
+
+      # Bot configurations (hot-reload in dev)
+      - ./ai-bot/bots:/app/bots
+
+      # Prompt files (hot-reload in dev)
+      - ./ai-bot/prompts:/app/prompts
+
+      # Source code (hot reload enabled for development)
+      - ./ai-bot/src:/app/src
+    depends_on:
+      campfire:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+# ============================================================================
+# Networks - Default bridge network
+# ============================================================================
+networks:
+  default:
+    name: campfire-dev-network

@@ -1,0 +1,72 @@
+# Briefing Assistant Bot Configuration
+# v0.5.2 - File-based prompts migration (4th bot)
+
+bot_id: briefing_assistant
+bot_key: "11-cLwvq6mLx4WV"
+name: 日报助手
+display_name: 日报助手 (Briefing Assistant)
+description: Automated daily briefing generation and historical briefing search assistant
+
+# Model Configuration
+model_config:
+  model: claude-haiku-4-5-20251001
+  temperature: 0.7
+  max_tokens: 4096
+  thinking:
+    enabled: false
+    budget_tokens: 0
+
+# File-based System Prompt (v0.5.2)
+# Prompt file: prompts/bots/briefing_assistant.md
+# Template variables: $current_date, $user_name, $room_name
+system_prompt_file: briefing_assistant.md
+
+# MCP Servers
+mcp_servers:
+  - campfire
+
+# Tools Configuration (Config-Driven Architecture v0.4.0)
+tools:
+  builtin:
+    - WebSearch
+    - WebFetch
+    - Read
+    - Grep
+    - Glob
+    - Task
+    - Skill  # v0.5.0: Native Agent SDK skills (plugin + custom)
+
+  campfire:
+    - search_conversations
+    - get_user_context
+    - generate_daily_briefing
+    - search_briefings
+    - save_file  # v0.5.2: Universal file saving (downloadable briefing reports)
+
+# Language Settings
+languages:
+  - zh-CN
+  - en
+default_language: zh-CN
+
+# Bot Capabilities
+capabilities:
+  file_analysis: false
+  conversation_memory: true
+  user_personalization: false
+  knowledge_base_access: true
+  briefing_generation: true
+  briefing_search: true
+
+# Bot Settings
+settings:
+  max_context_messages: 10
+  enable_markdown: true
+  enable_citations: true
+  response_style: professional
+
+# Migration Notes (v0.5.2)
+# This is the 4th bot to use file-based prompts.
+# Old system_prompt field is now in: prompts/bots/briefing_assistant.md
+# JSON config backup: bots/briefing_assistant.json
+# Key change: References Skill("daily-briefing") for detailed briefing workflows

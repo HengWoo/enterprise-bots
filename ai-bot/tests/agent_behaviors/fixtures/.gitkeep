@@ -1,0 +1,8 @@
+# Test fixtures directory
+#
+# This directory will contain:
+# - sample_report.pdf (for PDF processing tests)
+# - sample_data.xlsx (for Excel analysis tests)
+# - sample_image.png (for image processing tests)
+#
+# Files will be added during pilot validation based on real test cases.

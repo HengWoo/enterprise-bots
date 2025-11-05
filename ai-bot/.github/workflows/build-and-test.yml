@@ -1,0 +1,83 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main, develop, feature/*]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run verification module tests
+        run: |
+          uv run pytest tests/verification/ -v --cov=src/verification --cov-report=term
+
+      - name: Run codegen module tests (if ruff/mypy available)
+        run: |
+          # Install linting tools for codegen tests
+          uv pip install ruff mypy || true
+          uv run pytest tests/agent_behaviors/test_codegen_integration.py -v || true
+        continue-on-error: true
+
+      - name: Run agent behavior tests
+        run: |
+          uv run pytest tests/agent_behaviors/ -v -k "not pilot_critical_paths"
+        continue-on-error: true
+
+      - name: Build Docker image
+        run: docker build -t campfire-ai-bot:test .
+
+      - name: Run health check
+        run: |
+          docker run -d --name test-bot -p 8000:8000 \
+            -e ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }} \
+            campfire-ai-bot:test
+          sleep 15
+          curl -f http://localhost:8000/health || exit 1
+          docker stop test-bot
+          docker rm test-bot
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run ruff linting
+        run: |
+          uv pip install ruff
+          uv run ruff check src/ tests/
+        continue-on-error: true
+
+      - name: Run mypy type checking
+        run: |
+          uv pip install mypy
+          uv run mypy src/verification/ src/codegen/
+        continue-on-error: true

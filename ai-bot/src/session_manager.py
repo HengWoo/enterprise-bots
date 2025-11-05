@@ -206,6 +206,43 @@ class SessionManager:
         # Persist to disk immediately
         self._save_session_id_to_disk(room_id, bot_id, session_id)
 
+    async def handle_invalid_session(self, room_id: int, bot_id: str, old_session_id: str) -> None:
+        """
+        Handle invalid session error by cleaning up stale session data.
+
+        Called when Claude CLI subprocess reports "No conversation found with session ID".
+        This typically occurs after container restart when session cache references
+        a session ID that no longer exists in the subprocess.
+
+        Cleanup actions:
+        1. Remove from in-memory cache
+        2. Delete session file from disk
+        3. Log recovery information
+
+        Next request will automatically create fresh session (Tier 3 Cold Path).
+
+        Args:
+            room_id: Room ID
+            bot_id: Bot ID
+            old_session_id: The session ID that couldn't be found
+        """
+        async with self._lock:
+            cache_key = (room_id, bot_id)
+
+            # Remove from memory cache
+            if cache_key in self._sessions:
+                del self._sessions[cache_key]
+                print(f"[SessionManager] 🗑️  Removed stale session from memory cache")
+
+            # Delete session file from disk
+            session_file = self.persistence_dir / f"session_{room_id}_{bot_id}.json"
+            if session_file.exists():
+                session_file.unlink()
+                print(f"[SessionManager] 🗑️  Deleted stale session file: {session_file}")
+
+            print(f"[SessionManager] ✅ Cleaned up invalid session: {old_session_id}")
+            print(f"[SessionManager]    Next request will create fresh session (Tier 3)")
+
     def _save_session_id_to_disk(self, room_id: int, bot_id: str, session_id: str):
         """
         Persist session_id to disk as JSON file.
@@ -353,8 +390,13 @@ class SessionManager:
         if cache_key in self._sessions:
             session_state = self._sessions[cache_key]
 
-            # TODO: Close client connection if SDK provides close method
-            # For now, just remove from cache and let garbage collection handle it
+            # Properly disconnect Claude SDK client
+            try:
+                if session_state.client:
+                    await session_state.client.disconnect()
+                    print(f"[SessionManager] 🔌 Disconnected Claude SDK client")
+            except Exception as e:
+                print(f"[SessionManager] ⚠️  Error disconnecting client: {e}")
 
             del self._sessions[cache_key]
 

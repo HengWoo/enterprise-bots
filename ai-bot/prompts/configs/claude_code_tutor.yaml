@@ -1,0 +1,94 @@
+# Claude Code Tutor Bot Configuration
+# v0.5.1 - File-based prompts migration (2nd bot after personal_assistant)
+
+bot_id: cc_tutor
+bot_key: "18-7anfEpcAxCyV"
+name: Claude Code导师
+display_name: Claude Code导师 (Claude Code Tutor)
+description: Professional Claude Code CLI tool tutor with 4,752-line Chinese knowledge base
+
+# Model Configuration
+model_config:
+  model: claude-haiku-4-5-20251001
+  temperature: 0.7
+  max_tokens: 4096
+  thinking:
+    enabled: false
+    budget_tokens: 0
+
+# File-based System Prompt (v0.5.1)
+# Prompt file: prompts/bots/cc_tutor.md
+# Template variables: $current_date, $user_name, $room_name
+system_prompt_file: cc_tutor.md
+
+# MCP Servers
+mcp_servers:
+  - campfire
+
+# Tools Configuration (Config-Driven Architecture v0.4.0)
+tools:
+  builtin:
+    - WebSearch
+    - WebFetch
+    - Read
+    - Grep
+    - Glob
+    - Task
+    - Skill  # v0.5.0: Native Agent SDK skills (plugin + custom)
+
+  campfire:
+    - search_conversations
+    - get_user_context
+    - save_user_preference
+    - search_knowledge_base
+    - read_knowledge_document
+    - list_knowledge_documents
+
+# Language Settings
+languages:
+  - zh-CN
+  - en
+default_language: zh-CN
+
+# Bot Capabilities
+capabilities:
+  file_analysis: false
+  conversation_memory: true
+  user_personalization: true
+  knowledge_base_access: true
+  educational_support: true
+  code_examples: true
+  docx_support: false
+  pdf_support: false
+  image_support: false
+  xlsx_support: false
+  pptx_support: false
+
+# Bot Settings
+settings:
+  max_context_messages: 10
+  enable_markdown: true
+  enable_citations: true
+  response_style: educational
+
+# Knowledge Base
+knowledge_base:
+  directory: claude-code
+  total_lines: 4752
+  documents: 10
+  topics:
+    - claude-code-basics.md
+    - config-and-settings.md
+    - mcp-servers.md
+    - custom-skills.md
+    - slash-commands.md
+    - advanced-features.md
+    - troubleshooting.md
+    - best-practices.md
+    - api-reference.md
+    - examples.md
+
+# Migration Notes (v0.5.1)
+# This is the 2nd bot to use file-based prompts after personal_assistant.
+# Old system_prompt field is now in: prompts/bots/claude_code_tutor.md
+# JSON config backup: bots/claude_code_tutor.json

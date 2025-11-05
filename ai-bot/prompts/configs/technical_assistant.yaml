@@ -1,0 +1,81 @@
+# Technical Assistant Bot Configuration
+# v0.5.2 - File-based prompts migration (3rd bot after personal_assistant and cc_tutor)
+
+bot_id: technical_assistant
+bot_key: "3-2cw4dPpVMk86"
+name: 技术助手
+display_name: 技术助手 (Technical Assistant)
+description: Software engineering and technical problem-solving assistant with document analysis capabilities
+
+# Model Configuration
+model_config:
+  model: claude-haiku-4-5-20251001
+  temperature: 0.7
+  max_tokens: 8192
+  thinking:
+    enabled: false
+    budget_tokens: 0
+
+# File-based System Prompt (v0.5.2)
+# Prompt file: prompts/bots/technical_assistant.md
+# Template variables: $current_date, $user_name, $room_name
+system_prompt_file: technical_assistant.md
+
+# MCP Servers
+mcp_servers:
+  - campfire
+
+# Tools Configuration (Config-Driven Architecture v0.4.0)
+tools:
+  builtin:
+    - WebSearch
+    - WebFetch
+    - Read
+    - Grep
+    - Glob
+    - Task
+    - Skill  # v0.5.0: Native Agent SDK skills (plugin + custom)
+
+  campfire:
+    - search_conversations
+    - get_user_context
+    - save_user_preference
+    - search_knowledge_base
+    - read_knowledge_document
+    - list_knowledge_documents
+    - save_file  # v0.5.2: Universal file saving (code documentation, technical diagrams)
+
+# Language Settings
+languages:
+  - en
+  - zh-CN
+default_language: en
+
+# Bot Capabilities
+capabilities:
+  file_analysis: true
+  conversation_memory: true
+  user_personalization: true
+  knowledge_base_access: true
+  document_processing: true
+  pdf_support: true
+  docx_support: true
+  image_support: false
+  xlsx_support: false
+  pptx_support: false
+  code_review: true
+  architecture_design: true
+  devops_support: true
+
+# Bot Settings
+settings:
+  max_context_messages: 30
+  enable_markdown: true
+  enable_citations: true
+  response_style: technical
+
+# Migration Notes (v0.5.2)
+# This is the 3rd bot to use file-based prompts after personal_assistant and cc_tutor.
+# Old system_prompt field is now in: prompts/bots/technical_assistant.md
+# JSON config backup: bots/technical_assistant.json
+# Key change: process_docx MCP tool replaced by Skill("document-skills-docx")
