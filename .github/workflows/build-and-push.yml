@@ -17,6 +17,9 @@ jobs:
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for creating GitHub releases
+      packages: write  # Required for pushing Docker images
 
     steps:
       - name: Checkout code
