@@ -76,7 +76,7 @@ COPY --chown=appuser:appuser prompts/ ./prompts/
 COPY --chown=appuser:appuser scripts/ ./scripts/
 COPY --chown=appuser:appuser .claude/ ./.claude/
 
-# Copy Financial MCP and install dependencies
+# Copy Financial MCP and install dependencies (git submodule)
 COPY financial-mcp/ /app/financial-mcp/
 WORKDIR /app/financial-mcp
 # Remove broken .venv if it exists

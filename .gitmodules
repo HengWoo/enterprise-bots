@@ -1,0 +1,3 @@
+[submodule "ai-bot/financial-mcp"]
+	path = ai-bot/financial-mcp
+	url = https://github.com/HengWoo/fin_report_agent.git

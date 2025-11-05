@@ -60,9 +60,7 @@ logs/
 ai-knowledge/
 !ai-knowledge/.gitkeep
 
-# Financial MCP (external dependency)
-financial-mcp/
-!financial-mcp/.gitkeep
+# Financial MCP now managed as git submodule (see .gitmodules)
 
 # Temporary files
 tmp/
