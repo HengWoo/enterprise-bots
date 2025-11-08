@@ -2,7 +2,7 @@
 # v0.5.2 - File-based prompts migration (5th bot)
 
 bot_id: operations_assistant
-bot_key: "TBD"  # To be assigned in production
+bot_key: "17-9bsKCPyVKUQC"  # Production value (verified Nov 9, 2025)
 name: 运营数据助手
 display_name: 运营数据助手 (Operations Assistant)
 description: Restaurant operations analytics with STAR framework, Supabase RPC tools, and KPI interpretation
