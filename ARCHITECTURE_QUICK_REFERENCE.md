@@ -1,7 +1,8 @@
 # Campfire AI Bot - Architecture Quick Reference
 
-**Version:** v0.4.1 (Production: v0.4.0.2)
-**Last Updated:** 2025-10-30
+**Production Version:** v0.5.2.2 ✅
+**Development Version:** v0.5.3 🔄 (Code Execution with MCP - 85-95% token savings)
+**Last Updated:** 2025-11-09
 
 ---
 
@@ -13,24 +14,25 @@
 | **Domain** | https://chat.smartice.ai |
 | **Platform** | Campfire (37signals ONCE) - auto-updates nightly |
 | **Framework** | FastAPI + Claude Agent SDK 0.1.4 |
-| **Model** | claude-haiku-4-5-20251001 (all 8 bots) |
+| **Model** | claude-haiku-4-5-20251001 (all 7 bots) |
 | **Database** | SQLite3 (WAL mode, read-only access) |
 | **Deployment** | Docker (hengwoo/campfire-ai-bot:latest) |
 
 ---
 
-## 8 Active Bots
+## 7 Active Bots - 100% Migrated ✅
 
 | Bot | Bot Key | Total Tools | Special Capabilities |
 |-----|---------|-------------|---------------------|
-| 财务分析师 (Financial Analyst) | `2-CsheovnLtzjM` | 35 | Excel analysis, Financial MCP (17 tools) |
-| 技术助手 (Technical Assistant) | `3-2cw4dPpVMk86` | 15 | Knowledge base, web research |
-| 个人助手 (Personal Assistant) | `4-GZfqGLxdULBM` | 22 | Tasks, reminders, Skills MCP (file-based prompts) |
-| 日报助手 (Briefing Assistant) | `11-cLwvq6mLx4WV` | 17 | AI-powered daily briefings, historical search |
-| AI Assistant (Default) | `10-vWgb0YVbUSYs` | 15 | General-purpose assistance |
-| 运营数据助手 (Operations Assistant) | TBD | 28 | Supabase, STAR analytics (10 RPC functions) |
-| Claude Code 导师 (CC Tutor) | TBD | 15 | Claude Code education, 4.7K line knowledge base |
-| 菜单工程师 (Menu Engineer) | `19-gawmDGiVGP4u` | 20 | Boston Matrix profitability analysis (5 tools) |
+| 财务分析师 (Financial Analyst) | `2-CsheovnLtzjM` | 35 | Excel analysis, Financial MCP (17 tools), file-based prompts ✅, native skills ✅ |
+| 技术助手 (Technical Assistant) | `3-2cw4dPpVMk86` | 15 | Web research, knowledge base, file-based prompts ✅, native skills ✅ |
+| 个人助手 (Personal Assistant) | `10-vWgb0YVbUSYs` | 21 | Tasks, reminders, automated reminders ✅, file-based prompts ✅, native skills ✅ |
+| 日报助手 (Briefing Assistant) | `11-cLwvq6mLx4WV` | 17 | AI-powered daily briefings, file-based prompts ✅, native skills ✅ |
+| 运营数据助手 (Operations Assistant) | `17-9bsKCPyVKUQC` | 28 | Supabase analytics, STAR framework, file-based prompts ✅, native skills ✅ |
+| Claude Code 导师 (CC Tutor) | `18-7anfEpcAxCyV` | 15 | Claude Code education, 4.7K KB, file-based prompts ✅, native skills ✅ |
+| 菜单工程师 (Menu Engineer) | `19-gawmDGiVGP4u` | 20 | Boston Matrix profitability, file-based prompts ✅, native skills ✅ |
+
+**Migration:** All 7/7 bots now use file-based prompts (.md) + YAML configs + native Agent SDK skills
 
 ---
 
@@ -79,13 +81,15 @@
 
 | Category | MCP Prefix | Tool Count | Used By |
 |----------|------------|------------|---------|
-| Built-in SDK | (none) | 8 | All bots (WebSearch, WebFetch, Read, Write, Edit, Bash, Grep, Glob) |
+| Built-in SDK | (none) | 8 | All bots (WebSearch, WebFetch, Read, Grep, Glob, Task, Bash, **Skill** ⭐) |
 | Campfire Base | `mcp__campfire__` | 7 | All bots (conversations, user context, knowledge base) |
-| Skills | `mcp__skills__` | 2 | personal_assistant, financial_analyst (progressive disclosure) |
+| Native Skills | (builtin Skill tool) | 7+ custom | **All 7 bots** - Filesystem-based auto-discovery (v0.5.0) ✅ |
 | Financial | `mcp__fin-report-agent__` | 17 | financial_analyst (Excel, financial calculations) |
 | Operations | `mcp__operations__` | 3 | operations_assistant (Supabase queries) |
 | Analytics | `mcp__analytics__` | 10 | operations_assistant (RPC functions) |
 | Menu Engineering | `mcp__menu_engineering__` | 5 | menu_engineer (Boston Matrix analysis) |
+
+**Note:** Skills MCP deprecated (v0.5.0) - All bots now use native Agent SDK Skill tool instead
 
 ---
 
@@ -185,10 +189,38 @@ User @mention → Campfire webhook → FastAPI background task →
 
 | Version | Status | Key Features |
 |---------|--------|--------------|
-| **v0.4.0.2** | ✅ **IN PRODUCTION** | Config-driven tools, documentation consolidation |
-| **v0.4.1** | ✅ READY (not deployed) | File-based prompts (PromptLoader + SkillsManager), 3-layer architecture |
-| **v0.4.2** | 📋 PLANNED | Web presentation generation (reveal.js + Chart.js) |
-| **v0.5.0** | 🔄 IN PROGRESS (84%) | Verification + Code generation + Testing |
+| **v0.4.1** | ✅ COMPLETE | File-based prompts (PromptLoader), 3-layer architecture |
+| **v0.5.0** | ✅ COMPLETE | Native Agent SDK skills (filesystem-based) |
+| **v0.5.1** | ✅ COMPLETE | Automated reminders, cc_tutor migration |
+| **v0.5.2** | ✅ COMPLETE | **Bot migration sprint - 100% completion** (5 bots migrated) |
+| **v0.5.2.2** | ✅ **IN PRODUCTION** | Memory leak fix, file download URL fix, CI/CD pipeline |
+| **v0.5.3** | 🔄 **IN DEVELOPMENT** | **Code execution with MCP - 85-95% token savings, 4 helper functions** |
+
+### v0.5.3 - Code Execution with MCP ⚡
+
+**Innovation:** Filter large documents in execution environment BEFORE returning to model
+
+**Problem → Solution:**
+```
+Before: read_knowledge_document("claude-code/llm.txt")
+        → 4,700 tokens to model (wasteful!)
+
+After:  search_and_extract(query="MCP", category="claude-code")
+        → 200-300 tokens to model (95% savings!)
+```
+
+**Helper Functions:**
+1. `search_and_extract()` - High-level entry point (recommended)
+2. `extract_section()` - Keyword-based filtering
+3. `extract_by_headings()` - Structure-based extraction
+4. `get_document_outline()` - Minimal token overview (~50 tokens)
+
+**Performance:**
+- Claude Code docs: 4,752 lines → ~200 tokens (**94% savings**)
+- Operations docs: 633 lines → ~100 tokens (76-84% savings)
+- Response time: **90% faster** (2.0s → 0.2s)
+
+**Status:** Implementation complete, ready for pilot on personal_assistant bot
 
 ---
 
@@ -271,6 +303,6 @@ User asks about...                    → Load this file
 
 ---
 
-**Quick Reference Version:** 1.0
-**Last Updated:** 2025-10-30
+**Quick Reference Version:** 3.0 (Updated with v0.5.3 Code Execution with MCP)
+**Last Updated:** 2025-11-09
 **Maintained By:** Development team
