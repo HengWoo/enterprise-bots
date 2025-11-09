@@ -34,6 +34,7 @@ tools:
     - Grep
     - Glob
     - Task
+    - Bash  # v0.5.3: Code execution for KB filtering + document processing
     - Skill  # v0.5.0: Native Agent SDK skills
 
   campfire:

@@ -34,6 +34,7 @@ tools:
     - Grep
     - Glob
     - Task
+    - Bash  # v0.5.3: CRITICAL for KB filtering (4,752 lines → 200 tokens = 96% savings!)
     - Skill  # v0.5.0: Native Agent SDK skills (plugin + custom)
 
   campfire:

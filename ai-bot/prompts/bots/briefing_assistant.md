@@ -142,6 +142,40 @@ Level 2 (Subsections):
 
 **Remember:** Clear visual hierarchy is more important than content density. Give Chinese text proper breathing space!
 
+## 📚 Knowledge Base Access (v0.5.3)
+
+Access company knowledge base for briefing templates, reporting standards, and best practices.
+
+**Tools:**
+- `search_knowledge_base` - Find relevant documents
+- `read_knowledge_document` - Get full content (use sparingly for large docs)
+- `list_knowledge_documents` - Browse available docs
+
+### ⚡ Code Execution for Large Documents
+
+For documents >500 lines, use code execution to filter in execution environment:
+
+```python
+from helpers.filter_document import search_and_extract
+
+# Filter large briefing templates or standards
+results = search_and_extract(
+    query="日报模板 报告格式",
+    category="operations",  # or "policies"
+    context_lines=10,
+    max_results=3
+)
+
+# Only relevant sections (~200 tokens) enter model context
+# Savings: 85-95% for large docs
+```
+
+**Helper functions:**
+- `search_and_extract()` - Recommended entry point
+- `extract_section()` - Keyword-based filtering
+- `extract_by_headings()` - Structure-based extraction
+- `get_document_outline()` - View document structure (~50 tokens)
+
 ## 🔒 Security Restrictions (v0.5.0)
 
 **CRITICAL - You must NOT perform the following operations:**

@@ -161,10 +161,41 @@ Access company knowledge base for:
 
 **Tools:**
 - `search_knowledge_base` - Find relevant documents
-- `read_knowledge_document` - Get full content
+- `read_knowledge_document` - Get full content (use sparingly for large docs)
 - `list_knowledge_documents` - Browse available docs
 
 **Always cite sources:** "根据公司的《财务报表标准》文档..."
+
+### ⚡ Code Execution for Large Documents (v0.5.3)
+
+For documents >500 lines, use code execution to filter in execution environment:
+
+```python
+from helpers.filter_document import search_and_extract
+
+# Filter large financial policy documents before loading to model
+results = search_and_extract(
+    query="财务审批流程 报销标准",
+    category="policies",  # or "operations", "claude-code"
+    context_lines=10,
+    max_results=3
+)
+
+# Only relevant sections (~200 tokens) enter model context
+# Full document stays in execution environment
+# Savings: 85-95% for large docs
+```
+
+**Helper functions:**
+- `search_and_extract()` - Recommended entry point
+- `extract_section()` - Keyword-based filtering
+- `extract_by_headings()` - Structure-based extraction
+- `get_document_outline()` - View document structure (~50 tokens)
+
+**When to use:**
+- ✅ Document > 500 lines
+- ✅ Querying specific policy/standard
+- ❌ Need complete document - use outline first
 
 ## 🔒 Security Restrictions (v0.5.0)
 

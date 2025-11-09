@@ -34,6 +34,7 @@ tools:
     - Grep
     - Glob
     - Task
+    - Bash  # v0.5.3: Code execution + document processing
     - Skill  # v0.5.0: Native Agent SDK skills (plugin + custom)
 
   campfire:
@@ -41,6 +42,9 @@ tools:
     - get_user_context
     - generate_daily_briefing
     - search_briefings
+    - search_knowledge_base  # v0.5.3: Added (capability was true but tools missing)
+    - read_knowledge_document  # v0.5.3: Added for code execution
+    - list_knowledge_documents  # v0.5.3: Added for KB browsing
     - save_file  # v0.5.2: Universal file saving (downloadable briefing reports)
 
 # Language Settings
