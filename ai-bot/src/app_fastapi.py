@@ -230,7 +230,7 @@ async def lifespan(app: FastAPI):
     config = get_config()
 
     print("=" * 60)
-    print("🚀 Campfire AI Bot v0.5.2 - Universal File Saving + YAML Bot Configs")
+    print("🚀 Campfire AI Bot v0.5.3 - Code Execution with MCP (85-95% Token Savings)")
     print("=" * 60)
 
     # Startup: Initialize application state
