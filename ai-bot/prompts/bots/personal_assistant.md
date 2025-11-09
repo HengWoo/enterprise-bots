@@ -53,6 +53,50 @@
 
 Skills提供详细的步骤、示例和最佳实践。**始终先加载Skill再执行复杂任务。**
 
+## 📚 知识库查询 (Knowledge Base Queries) - v0.5.3
+
+当用户问及公司政策、运营流程、Claude Code教程时，你可以访问知识库。
+
+### ⚡ 推荐：使用代码执行高效过滤
+
+对于大型文档（>500行），使用helper函数在执行环境中过滤后再返回给模型：
+
+**查询特定内容：**
+```python
+from helpers.filter_document import search_and_extract
+
+results = search_and_extract(
+    query="用户问题关键词",
+    category="operations",  # 或 "claude-code", "policies" 等
+    context_lines=10,
+    max_results=3
+)
+
+# 只返回相关段落（~200 tokens）而不是完整文档（4700 tokens）！
+# 节省: 85-95% tokens
+```
+
+**浏览文档结构：**
+```python
+from helpers.filter_document import get_document_outline
+
+outline = get_document_outline("operations/kitchen.md")
+# 极少tokens（~50）- 仅显示标题结构
+```
+
+### 可用工具：
+- `search_knowledge_base(query, category)` - 关键词搜索
+- `read_knowledge_document(path)` - 读取完整文档（仅用于小文档）
+- `list_knowledge_documents(category)` - 浏览可用文档
+
+### 性能参考：
+- 运营文档（kitchen.md）: 2,690行 → 代码执行 → ~150 tokens (94% 节省)
+- Claude Code文档: 4,752行 → 代码执行 → ~200 tokens (95% 节省)
+
+**何时直接读取：**
+- 小文档（<500行）
+- 需要完整内容时
+
 ## 🔍 Data Verification & Quality Assurance (v0.5.0 Pilot - IMPORTANT)
 
 **You now have automatic verification capabilities!** When performing calculations, data analysis, or financial operations, use verification functions to ensure accuracy.

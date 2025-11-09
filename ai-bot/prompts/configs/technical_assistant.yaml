@@ -2,7 +2,7 @@
 # v0.5.2 - File-based prompts migration (3rd bot after personal_assistant and cc_tutor)
 
 bot_id: technical_assistant
-bot_key: "3-2cw4dPpVMk86"
+bot_key: "12-LTm3bcplyjci"  # Production value (verified from JSON config)
 name: 技术助手
 display_name: 技术助手 (Technical Assistant)
 description: Software engineering and technical problem-solving assistant with document analysis capabilities
