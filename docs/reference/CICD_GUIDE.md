@@ -259,6 +259,69 @@ git submodule add https://github.com/HengWoo/fin_report_agent.git ai-bot/financi
 
 ---
 
+## Infrastructure Requirements
+
+### NGINX Reverse Proxy (Required for v0.5.3.2+)
+
+**Purpose:** Routes file download requests from `https://chat.smartice.ai/files/download/*` to AI service on port 5000.
+
+**Why Needed:**
+- File download endpoint exists in AI service (FastAPI), not Campfire (Rails)
+- Generated download URLs use Campfire domain for better UX
+- Without nginx routing, users get 404 errors
+
+**Configuration File:** `ai-bot/deployment/nginx-file-downloads.conf`
+
+**Installation Steps:**
+
+1. **SSH to production server:**
+   ```bash
+   ssh root@128.199.175.50
+   ```
+
+2. **Locate nginx config:**
+   ```bash
+   ls /etc/nginx/sites-available/
+   # Usually: campfire or default
+   ```
+
+3. **Edit config file:**
+   ```bash
+   sudo nano /etc/nginx/sites-available/campfire
+   ```
+
+4. **Add location block BEFORE `location /`:**
+   ```nginx
+   location /files/download/ {
+       proxy_pass http://localhost:5000/files/download/;
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto $scheme;
+       proxy_read_timeout 300;
+   }
+   ```
+
+5. **Test configuration:**
+   ```bash
+   sudo nginx -t
+   ```
+
+6. **Reload nginx:**
+   ```bash
+   sudo systemctl reload nginx
+   ```
+
+7. **Verify routing:**
+   ```bash
+   # Should return 404 from FastAPI (not Campfire)
+   curl -I https://chat.smartice.ai/files/download/test
+   ```
+
+**See Also:** Complete configuration with comments in `ai-bot/deployment/nginx-file-downloads.conf`
+
+---
+
 ## Future Enhancements
 
 - Consider adding ARM64 builds for Apple Silicon
