@@ -46,6 +46,9 @@ tools:
     - set_reminder
     - save_personal_note
     - search_personal_notes
+    - search_knowledge_base
+    - read_knowledge_document
+    - list_knowledge_documents
     - save_html_presentation
     - save_file  # v0.5.2: Universal file saving (PPTX, DOCX, XLSX, PDF, etc.)
 
@@ -62,7 +65,7 @@ capabilities:
   file_analysis: true
   conversation_memory: true
   user_personalization: true
-  knowledge_base_access: false
+  knowledge_base_access: true  # v0.5.3: Enabled for code execution testing
   personal_productivity: true
   skills_progressive_disclosure: true
   docx_support: true
