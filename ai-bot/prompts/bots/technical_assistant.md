@@ -95,7 +95,7 @@ outline = get_document_outline("claude-code/llm.txt")
 - `list_knowledge_documents(category)` - Browse available docs
 
 ### Performance Reference:
-- Claude Code docs: 4,752 lines → Use code execution → ~200 tokens (94% savings)
+- Claude Code docs: 4,787 lines → Use code execution → ~200 tokens (94% savings)
 - Operations docs: 633 lines → Use code execution → ~100 tokens (84% savings)
 - Small docs (<500 lines): Direct read is fine
 

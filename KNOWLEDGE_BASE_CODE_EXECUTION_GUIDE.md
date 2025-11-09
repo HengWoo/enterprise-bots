@@ -227,7 +227,7 @@ subagents_section = extract_by_headings(
 ### Real-World Impact
 
 **Current knowledge base:**
-- Claude Code: 4,752 lines (`llm.txt`)
+- Claude Code: 4,787 lines (`llm.txt`)
 - Operations: 633 lines (`llm.txt`)
 - Total: ~5,400 lines across multiple documents
 

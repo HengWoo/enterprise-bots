@@ -49,7 +49,7 @@
 ├── user_contexts/              # User preferences
 ├── company_kb/                 # Company documents
 │   ├── briefings/             # Daily briefings
-│   ├── claude-code/           # Claude Code tutorials (4.7K lines)
+│   ├── claude-code/           # Claude Code tutorials (4.8K lines)
 │   └── operations/            # Operations workflows (633 lines)
 └── logs/                       # Application logs
 
@@ -203,7 +203,7 @@ User @mention → Campfire webhook → FastAPI background task →
 **Problem → Solution:**
 ```
 Before: read_knowledge_document("claude-code/llm.txt")
-        → 4,700 tokens to model (wasteful!)
+        → 4,800 tokens to model (wasteful!)
 
 After:  search_and_extract(query="MCP", category="claude-code")
         → 200-300 tokens to model (95% savings!)
@@ -216,7 +216,7 @@ After:  search_and_extract(query="MCP", category="claude-code")
 4. `get_document_outline()` - Minimal token overview (~50 tokens)
 
 **Performance:**
-- Claude Code docs: 4,752 lines → ~200 tokens (**94% savings**)
+- Claude Code docs: 4,787 lines → ~200 tokens (**94% savings**)
 - Operations docs: 633 lines → ~100 tokens (76-84% savings)
 - Response time: **90% faster** (2.0s → 0.2s)
 

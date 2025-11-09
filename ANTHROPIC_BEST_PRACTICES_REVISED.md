@@ -93,7 +93,7 @@ class CampfireTools:
 **Current implementation:**
 
 ```python
-# When user asks about Claude Code documentation (4.7K lines)
+# When user asks about Claude Code documentation (4.8K lines)
 doc = read_knowledge_document("claude-code/llm.txt")
 # Returns: Full 4700 lines into model context
 # Cost: 4700 tokens
@@ -164,7 +164,7 @@ results = search_and_extract(
 | Multi-doc (3x1000) | 3000 tokens | 400-600 tokens | 80-87% |
 
 **Real-world impact for your KB:**
-- Claude Code docs: 4,752 lines → ~200-300 tokens (94% savings)
+- Claude Code docs: 4,787 lines → ~200-300 tokens (94% savings)
 - Operations docs: 633 lines → ~100-150 tokens (76-84% savings)
 - **Average:** 86-90% token reduction for KB queries
 

@@ -13,7 +13,7 @@ The knowledge base is stored at `/root/ai-knowledge/company_kb/` (production) or
 
 ```
 knowledge-base/
-├── claude-code/                           # Claude Code Tutor knowledge base (4.7K lines)
+├── claude-code/                           # Claude Code Tutor knowledge base (4.8K lines)
 │   ├── llm.txt                           # LLM-optimized main index
 │   ├── README.md                         # Guide to this knowledge base
 │   ├── getting-started/
@@ -420,7 +420,7 @@ When users ask about company policies:
 ```
 
 **Files Using This Pattern:**
-- `knowledge-base/claude-code/llm.txt` (4,752 lines)
+- `knowledge-base/claude-code/llm.txt` (4,787 lines)
 - `knowledge-base/operations/llm.txt` (633 lines)
 
 **Token Efficiency:**
@@ -652,7 +652,7 @@ for bots_dir in bots_dirs:
 
 | Knowledge Base | Location | Size | Used By |
 |---|---|---|---|
-| Claude Code | `knowledge-base/claude-code/` | 4.7K lines | cc_tutor |
+| Claude Code | `knowledge-base/claude-code/` | 4.8K lines | cc_tutor |
 | Operations | `knowledge-base/operations/` | 633 lines | operations_assistant |
 
 ### 8.3 Skills Available

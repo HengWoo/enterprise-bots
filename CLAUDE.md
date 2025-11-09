@@ -122,7 +122,7 @@ Read(file_path="ai-bot/archive/README.md")
 - ✅ Based on Anthropic's "Code Execution with MCP" article (Nov 2025)
 
 **Performance Targets:**
-- 85-95% token savings for large document queries (4.7K lines → 200-300 tokens)
+- 85-95% token savings for large document queries (4.8K lines → 200-300 tokens)
 - 90% faster response times (2.0s → 0.2s for large docs)
 - ~86% average token reduction across all KB queries
 
@@ -159,8 +159,8 @@ Read(file_path="ai-bot/archive/README.md")
 **What Changed:** Implemented Anthropic's latest best practice for knowledge base optimization using code execution to filter documents in the execution environment before returning results to the model.
 
 **The Problem:**
-- Large knowledge base documents (4,700+ lines) were loading entirely into model context
-- Claude Code docs: 4,752 lines = ~4,700 tokens per query
+- Large knowledge base documents (4,800+ lines) were loading entirely into model context
+- Claude Code docs: 4,787 lines = ~4,800 tokens per query
 - Operations docs: 633 lines = ~630 tokens per query
 - Wasteful: Most queries only need 200-300 lines of relevant content
 
@@ -212,12 +212,12 @@ Only filtered content enters model context →
 |--------------|---------------------|----------------------|---------|
 | Small (500 lines) | 500 tokens | 500 tokens | 0% (no benefit) |
 | Medium (1.5K lines) | 1,500 tokens | 200-300 tokens | 80-87% |
-| Large (4.7K lines) | 4,700 tokens | 300-500 tokens | 89-94% |
-| Large (browse) | 4,700 tokens | 50-100 tokens | **98%** |
+| Large (4.8K lines) | 4,800 tokens | 300-500 tokens | 89-94% |
+| Large (browse) | 4,800 tokens | 50-100 tokens | **98%** |
 | Multi-doc (3×1K) | 3,000 tokens | 400-600 tokens | 80-87% |
 
 **Real-World Impact:**
-- Claude Code queries: 4,752 lines → ~200-300 tokens (**94% savings**)
+- Claude Code queries: 4,787 lines → ~200-300 tokens (**94% savings**)
 - Operations queries: 633 lines → ~100-150 tokens (76-84% savings)
 - **Average: 86% token reduction for KB queries**
 - **Response time: 90% faster** (2.0s → 0.2s for large docs)
@@ -598,7 +598,7 @@ prompts/configs/menu_engineer.yaml
 ├── user_contexts/              # User preferences
 ├── company_kb/                 # Company documents
 │   ├── briefings/             # Daily briefings
-│   ├── claude-code/           # Claude Code tutorials (4.7K lines)
+│   ├── claude-code/           # Claude Code tutorials (4.8K lines)
 │   └── operations/            # Operations workflows (633 lines)
 
 /var/once/campfire/             # Campfire (managed by ONCE)

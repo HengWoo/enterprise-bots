@@ -270,7 +270,7 @@ builtin_tools = [..., "Skill"]
 **Branch:** `claude/codebase-review-inspection-011CUqK3BbmCpxT6HmYQu9nT`
 
 **Problem Solved:**
-Large knowledge base documents (4,700+ lines) were loading entirely into model context, wasting tokens when most queries only need 200-300 lines of relevant content.
+Large knowledge base documents (4,800+ lines) were loading entirely into model context, wasting tokens when most queries only need 200-300 lines of relevant content.
 
 **Architecture Pattern (Anthropic's Three-Pillar Model):**
 ```
@@ -303,11 +303,11 @@ Code executes in Docker sandbox:
 |--------------|--------|-------|---------------|
 | Small (500 lines) | 500 | 500 | 0% |
 | Medium (1.5K lines) | 1,500 | 200-300 | 80-87% |
-| Large (4.7K lines) | 4,700 | 300-500 | 89-94% |
+| Large (4.8K lines) | 4,700 | 300-500 | 89-94% |
 | Browse large doc | 4,700 | 50-100 | **98%** |
 
 **Real-World Impact:**
-- Claude Code docs: 4,752 lines → ~200 tokens (**94% savings**)
+- Claude Code docs: 4,787 lines → ~200 tokens (**94% savings**)
 - Operations docs: 633 lines → ~100 tokens (76-84% savings)
 - **Average: 86% token reduction for KB queries**
 - **Response time: 90% faster** (2.0s → 0.2s)

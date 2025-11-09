@@ -67,3 +67,7 @@ tmp/
 temp/
 *.tmp
 archive/
+
+# Deleted directories (v0.5.3.2 cleanup - do not recreate)
+knowledge-base/     # Merged into ai-knowledge/company_kb/
+ai-bot/ai-bot/      # Old test directory
