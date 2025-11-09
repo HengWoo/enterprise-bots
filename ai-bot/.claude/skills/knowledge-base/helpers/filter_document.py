@@ -59,8 +59,8 @@ def extract_section(
     if os.path.isabs(document_path):
         doc_path = Path(document_path)
     else:
-        # Try relative to knowledge base root
-        kb_root = Path(__file__).parent.parent.parent.parent.parent / "knowledge-base"
+        # Try relative to knowledge base root (production: /app/ai-knowledge/company_kb)
+        kb_root = Path(os.getenv('KNOWLEDGE_BASE_DIR', '/app/ai-knowledge/company_kb'))
         doc_path = kb_root / document_path
 
         # If not found, try relative to current directory
@@ -161,7 +161,7 @@ def extract_by_headings(
     if os.path.isabs(document_path):
         doc_path = Path(document_path)
     else:
-        kb_root = Path(__file__).parent.parent.parent.parent.parent / "knowledge-base"
+        kb_root = Path(os.getenv('KNOWLEDGE_BASE_DIR', '/app/ai-knowledge/company_kb'))
         doc_path = kb_root / document_path
         if not doc_path.exists():
             doc_path = Path(document_path)
@@ -369,7 +369,7 @@ def get_document_outline(document_path: str) -> str:
     if os.path.isabs(document_path):
         doc_path = Path(document_path)
     else:
-        kb_root = Path(__file__).parent.parent.parent.parent.parent / "knowledge-base"
+        kb_root = Path(os.getenv('KNOWLEDGE_BASE_DIR', '/app/ai-knowledge/company_kb'))
         doc_path = kb_root / document_path
         if not doc_path.exists():
             doc_path = Path(document_path)
