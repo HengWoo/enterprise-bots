@@ -75,9 +75,9 @@ async def _save_html_presentation_impl(args):
         )
 
         # Get base URL for file downloads (external, browser-accessible)
-        # Production: http://128.199.175.50:5000 (AI service external endpoint)
+        # Production: https://chat.smartice.ai (from CAMPFIRE_URL env var)
         # Local dev: http://localhost:8000
-        base_url = os.getenv('FILE_DOWNLOAD_BASE_URL') or os.getenv('CAMPFIRE_URL', 'http://localhost:8000').replace('https://chat.smartice.ai', 'http://128.199.175.50:5000')
+        base_url = os.getenv('FILE_DOWNLOAD_BASE_URL') or os.getenv('CAMPFIRE_URL', 'http://localhost:8000')
 
         # Extract file size for additional info
         file_size = os.path.getsize(file_path)
@@ -245,9 +245,9 @@ async def _save_file_impl(args):
         )
 
         # Get base URL for file downloads (external, browser-accessible)
-        # Production: http://128.199.175.50:5000 (AI service external endpoint)
+        # Production: https://chat.smartice.ai (from CAMPFIRE_URL env var)
         # Local dev: http://localhost:8000
-        base_url = os.getenv('FILE_DOWNLOAD_BASE_URL') or os.getenv('CAMPFIRE_URL', 'http://localhost:8000').replace('https://chat.smartice.ai', 'http://128.199.175.50:5000')
+        base_url = os.getenv('FILE_DOWNLOAD_BASE_URL') or os.getenv('CAMPFIRE_URL', 'http://localhost:8000')
 
         # Extract file size for additional info
         file_size = os.path.getsize(file_path)
