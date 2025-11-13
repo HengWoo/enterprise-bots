@@ -13,6 +13,9 @@ services:
     container_name: campfire-ai-bot
     image: campfire-ai-bot:latest
 
+    # Init system to prevent zombie processes
+    init: true
+
     # Restart policy
     restart: unless-stopped
 
