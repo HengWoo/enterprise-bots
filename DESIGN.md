@@ -347,19 +347,15 @@ External Skills MCP (deprecated) → Native Agent SDK Skills
 
 ---
 
-### Other Modules (Paused)
+### v0.5.0 Modules (Implementation Complete, Pilot Pending)
 
-**1. Verification Module** (src/verification/)
-- Status: Implementation complete, testing pending
-- 170+ test cases created, 77% coverage
+**Note:** These modules were implemented but not yet deployed. Plans archived to `archive/v0.5.0-plans/`.
 
-**2. Code Generation Module** (src/codegen/)
-- Status: Implementation complete, integration with native skills pending
-- Template-based generation ready
+**1. Verification Module** (src/verification/) - 77% test coverage, 170+ tests
+**2. Code Generation Module** (src/codegen/) - Template-based generation ready
+**3. Test Infrastructure** (tests/agent_behaviors/) - 3 critical path tests
 
-**3. Test Infrastructure** (tests/agent_behaviors/)
-- Status: 3 critical path tests created
-- Will be activated after native skills production validation
+**Status:** Awaiting pilot validation. See `archive/v0.5.0-plans/` for implementation details.
 
 ---
 

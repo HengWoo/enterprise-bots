@@ -135,13 +135,10 @@ Read(file_path="ai-bot/archive/README.md")
 - 90% faster response times (2.0s → 0.2s for large docs)
 - ~86% average token reduction across all KB queries
 
-**Files Added in Branch:**
-1. `ANTHROPIC_BEST_PRACTICES_REVISED.md` (535 lines) - Updated recommendations
-2. `CODEBASE_ANALYSIS.md` (779 lines) - Architecture analysis
-3. `KNOWLEDGE_BASE_CODE_EXECUTION_GUIDE.md` (585 lines) - Implementation guide
-4. `KNOWLEDGE_BASE_QUICK_REFERENCE.md` (321 lines) - Quick reference
-5. `ai-bot/.claude/skills/knowledge-base/helpers/filter_document.py` (459 lines) - Helper functions
-6. `ai-bot/.claude/skills/knowledge-base/SKILL.md` (updated +140 lines)
+**Files Created:**
+- `ai-bot/.claude/skills/knowledge-base/helpers/filter_document.py` (459 lines) - 4 production-ready helper functions
+- `ai-bot/.claude/skills/knowledge-base/SKILL.md` (updated +140 lines) - Code execution workflows
+- Implementation docs archived to `archive/v0.5.3-implementation/` (5 files, ~2,220 lines)
 
 ### Deployment Complete (Nov 8-13, 2025)
 1. ✅ v0.5.3 merged to main (Nov 8)
@@ -275,235 +272,67 @@ Only filtered content enters model context →
 
 ### v0.5.2.2 - Critical Production Fixes (Nov 5-6, 2025)
 
-**Status:** ✅ COMPLETE - Docker images pushed to hub, ready for deployment
+**Status:** ✅ COMPLETE - Memory leak and file download URL fixes deployed
 
-**What Changed:** Fixed two critical production issues affecting memory management and file downloads.
+**Key Changes:**
+- Fixed memory leak (session cleanup task registration)
+- Fixed hardcoded localhost in file download URLs (now uses CAMPFIRE_URL env var)
+- CI/CD pipeline implemented (GitHub Actions with approval gates)
+- Codebase cleanup (~13.75GB reclaimed)
 
-**Implementation:**
+**Date:** 2025-11-05 to 2025-11-06
 
-**v0.5.2.1 - Session Cleanup Task Missing**
-```python
-# Problem: Periodic cleanup task created but never registered
-async def _periodic_cleanup(self):
-    while True:
-        await asyncio.sleep(60)  # Check every 1 minute
-        # ... cleanup logic ...
-
-# Fix: Actually start the task in __init__
-async def __init__(self):
-    # ...
-    asyncio.create_task(self._periodic_cleanup())  # ← Added this line
-```
-
-**Root Cause:**
-- Old Flask code had `@app.before_first_request` decorator
-- FastAPI migration: Changed to startup_event but left commented out
-- Result: Cleanup task created but never executed
-- Impact: Memory leak (sessions never cleaned up)
-
-**v0.5.2.2 - Hardcoded localhost URL**
-```python
-# Problem: Hardcoded localhost in file download URLs
-download_url = f"http://localhost:8000/files/download/{token}"
-
-# Fix: Use environment variable
-download_url = f"{os.getenv('CAMPFIRE_URL', 'http://localhost:8000')}/files/download/{token}"
-```
-
-**Root Cause:**
-- file_saving_tools.py had hardcoded localhost:8000
-- Production uses https://chat.smartice.ai
-- Result: Users got localhost URLs in production (broken links)
-
-**Impact:**
-- **Memory leak:** Fixed - sessions now properly cleaned up every minute
-- **File downloads:** Fixed - production URLs now work correctly
-- **Production ready:** Both Docker images pushed and tested
-
-**Files Modified:**
-- `src/session_manager.py` (1 line added - task registration)
-- `src/tools/file_saving_tools.py` (1 line changed - URL construction)
-
-**Testing:**
-- ✅ Local testing validated (cleanup task running)
-- ✅ Docker build successful
-- ✅ Images pushed to Docker Hub (0.5.2.1 and 0.5.2.2)
-
-**Next:** Production deployment and monitoring
-
-**Date:** 2025-11-05
+**See:** @docs/reference/VERSION_HISTORY.md for detailed implementation
 
 ---
 
 ### Native Agent SDK Skills Migration (v0.5.0 - SUCCESS)
 
-**Status:** ✅ COMPLETE - Fully validated with real-world test
+**Status:** ✅ COMPLETE - Migrated from external Skills MCP to Anthropic's native Agent SDK pattern
 
-**What Changed:** Migrated from external Skills MCP server to Anthropic's native Agent SDK skills pattern.
-
-**Architecture Change:**
-```
-OLD (Skills MCP):
-Bot → External MCP Server (stdio) → Skills files
-     ↓ mcp__skills__load_skill tool
-     ↓ Manual skill loading
-     ✗ Tool access control issues
-
-NEW (Native SDK):
-Bot → Agent SDK → .claude/skills/ (filesystem)
-     ↓ "Skill" builtin tool
-     ↓ Autonomous skill discovery
-     ✓ Clean tool separation
-```
-
-**Implementation (Nov 2, 2025):**
-1. Consolidated 9 skills to `.claude/skills/` (Anthropic standard location)
-2. Added `setting_sources=["user", "project"]` to ClaudeAgentOptions
-3. Added `"Skill"` to builtin tools (replaces `mcp__skills__load_skill`)
-4. Deprecated Skills MCP server (commented out, 2-4 week transition)
-5. Updated personal_assistant.yaml config
-
-**Test Results:**
-- ✅ Skills auto-discovered from `.claude/skills/` directory
-- ✅ Bot autonomously invoked `Skill` tool when needed
-- ✅ Real-world test: 22MB PPTX file → Chinese text extraction → English translation → File saved
-- ✅ All workflows functioning: document-skills-pptx, presentation-generation, code-generation, personal-productivity
-- ✅ No errors, clean execution logs
-
-**Benefits:**
-- ✓ Simpler architecture (no external MCP process)
-- ✓ Follows Anthropic best practices
-- ✓ Better tool access control
-- ✓ Skills loaded on-demand (token efficient)
-
-**Files Modified:**
-- `ai-bot/src/campfire_agent.py` (4 changes)
-- `ai-bot/prompts/configs/personal_assistant.yaml` (3 changes)
-- `.claude/skills/` (9 skills consolidated)
-
-**Next:** Production deployment + 1-week monitoring
+**Key Changes:**
+- Consolidated 9 skills to `.claude/skills/` (filesystem-based auto-discovery)
+- Added native "Skill" builtin tool (replaces external MCP server)
+- Validated with real-world test: 22MB PPTX processing pipeline
+- Benefits: Simpler architecture, better tool control, token efficient
 
 **Date:** 2025-11-02
+
+**See:** @docs/reference/VERSION_HISTORY.md for architecture details
 
 ---
 
 ### Automated Reminder Delivery + cc_tutor Migration (v0.5.1 - SUCCESS)
 
-**Status:** ✅ COMPLETE - Reminder logic validated, cc_tutor file-based prompts working
+**Status:** ✅ COMPLETE - Automated reminders + 2nd bot migration
 
-**Implementation (Nov 3, 2025):**
-
-**Part 1: Automated Reminder Delivery**
-1. Added APScheduler (BackgroundScheduler) with 1-minute check interval
-2. Created reminder_scheduler.py (384 lines) with natural language time parsing
-3. Integrated with FastAPI lifecycle (startup/shutdown hooks)
-4. Updated tool descriptions to reflect automated delivery
-5. Manual test validated: Status updated from "pending" → "triggered" ✅
-
-**Architecture:**
-```
-User creates reminder → Stored in user_contexts/user_X/reminders.json
-                     ↓
-APScheduler checks every 1 minute
-                     ↓
-remind_at <= now? → POST HTML notification to Campfire API
-                     ↓
-Reminder status: "triggered", triggered_at recorded
-```
-
-**Features:**
-- Natural language parsing: "明天上午10点", "2小时后"
-- HTML-styled notifications with Campfire design
-- File-based persistence (survives server restarts)
-- Testing mode (skips API posting for local dev)
-
-**Part 2: cc_tutor Migration**
-1. Created `prompts/bots/cc_tutor.md` (3KB personality file)
-2. Created `prompts/configs/claude_code_tutor.yaml` (YAML config)
-3. Fixed bot_id mismatch in campfire_agent.py (3 locations)
-4. Validated file-based prompt loading: `[Prompts] ✅ Loaded file-based prompt: prompts/bots/cc_tutor.md`
-
-**Test Results:**
-- ✅ Reminder detection working (past-due reminders caught correctly)
-- ✅ Status update working (JSON file changes persisted)
-- ✅ cc_tutor loads from markdown file (not JSON)
-- ✅ Template variables working ($current_date, $user_name, $room_name)
-
-**Files Modified:**
-- `pyproject.toml` - Added apscheduler, python-dateutil
-- `src/reminder_scheduler.py` - NEW (384 lines)
-- `src/app_fastapi.py` - Scheduler integration
-- `src/tools/campfire_tools.py` - Updated return message
-- `src/tools/personal_decorators.py` - Updated tool description
-- `src/campfire_agent.py` - Fixed cc_tutor bot_id
-- `prompts/bots/cc_tutor.md` - NEW
-- `prompts/configs/claude_code_tutor.yaml` - NEW
-
-**Next:** Continue bot migrations or deploy v0.5.1 to production
+**Key Changes:**
+- APScheduler integration with 1-minute check interval
+- Natural language time parsing ("明天上午10点", "2小时后")
+- HTML-styled notifications to Campfire API
+- cc_tutor migrated to file-based prompts (.md + YAML)
+- Template variable support ($current_date, $user_name, $room_name)
 
 **Date:** 2025-11-03
+
+**See:** @docs/reference/VERSION_HISTORY.md for implementation details
 
 ---
 
 ### Bot Migration Sprint - 100% Complete! (v0.5.2 - SUCCESS)
 
-**Status:** ✅ COMPLETE - All 7 active bots fully migrated (Nov 3-4, 2025)
+**Status:** ✅ COMPLETE - All 7/7 bots migrated to file-based prompts + native skills (Nov 3-4, 2025)
 
-**What Changed:** Completed file-based prompt + native skills migration for remaining 5 bots in 2-day sprint.
+**Achievement:** 🎉 **100% Migration Complete!**
+- 5 bots migrated in 2-day sprint (technical_assistant, briefing_assistant, operations_assistant, financial_analyst, menu_engineer)
+- All bots now use: .md personality files, YAML configs, Skill builtin tool, three-layer architecture
+- Benefits: 20% token savings, better maintainability, consistent patterns
 
-**Bots Migrated (Nov 3-4):**
-1. **technical_assistant** - 3rd bot (5.9KB .md file created)
-2. **briefing_assistant** - 4th bot (5.1KB .md file created)
-3. **operations_assistant** - 5th bot (6.0KB .md file created)
-4. **financial_analyst** - 6th bot (6.5KB .md file created)
-5. **menu_engineer** - 7th and FINAL bot (9.1KB .md file created)
-
-**Achievement:** 🎉 **100% Migration Complete!** All 7 active bots now use:
-- ✅ File-based prompts (.md personality files)
-- ✅ YAML configurations (prompts/configs/*.yaml)
-- ✅ Native Agent SDK skills (Skill builtin tool)
-- ✅ Three-layer architecture (personality + skills + dynamic context)
-
-**Implementation:**
-- Created 5 new .md personality files (~33KB total)
-- Created 5 new YAML configuration files
-- All configs include `Skill` in builtin tools
-- Menu_engineer.yaml notes: "100% migration complete! All 7 active bots now use file-based prompts"
-
-**Files Created:**
-```
-prompts/bots/technical_assistant.md (5.9KB)
-prompts/bots/briefing_assistant.md (5.1KB)
-prompts/bots/operations_assistant.md (6.0KB)
-prompts/bots/financial_analyst.md (6.5KB)
-prompts/bots/menu_engineer.md (9.1KB)
-
-prompts/configs/technical_assistant.yaml
-prompts/configs/briefing_assistant.yaml
-prompts/configs/operations_assistant.yaml
-prompts/configs/financial_analyst.yaml
-prompts/configs/menu_engineer.yaml
-```
-
-**Benefits:**
-- ✓ Token efficiency: 20% savings for simple queries (no skills loaded)
-- ✓ Maintainability: Prompts in readable markdown instead of JSON
-- ✓ Consistency: All bots use same architecture pattern
-- ✓ Scalability: Easy to add new bots following established pattern
-
-**Timeline:**
-- Oct 29: personal_assistant (1st bot, pilot)
-- Nov 3: cc_tutor (2nd bot)
-- Nov 3-4: 5 bots migrated in sprint
-- **Total: 7/7 bots = 100% complete**
+**Timeline:** Oct 29 (1st bot) → Nov 3-4 (sprint) → 100% complete
 
 **Date:** 2025-11-03 to 2025-11-04
 
-**Lessons Learned (Nov 9, 2025):**
-- **Issue Found:** operations_assistant bot_key was "TBD" in YAML but "17-9bsKCPyVKUQC" in production
-- **Root Cause:** Manual migration without checking existing JSON configs, no validation
-- **Why Unnoticed:** Dual-format fallback masked the problem (bot kept working)
-- **New Practice:** ⚠️ **Mandatory review after major versions** - verify all configs match production reality
+**See:** @docs/reference/VERSION_HISTORY.md for detailed file listings and lessons learned
 
 ---
 
