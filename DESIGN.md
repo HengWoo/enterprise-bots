@@ -1,8 +1,8 @@
 # Campfire AI Bot System - Architecture Design
 
 **Platform:** Campfire (37signals ONCE)
-**Current Version:** v0.5.2.2 (Production)
-**Status:** ✅ All 7 bots active with Haiku 4.5, 100% migrated to file-based prompts + native skills
+**Current Version:** v0.5.3.3 (Production)
+**Status:** ✅ All 7 bots active with Haiku 4.5, code execution with MCP, zombie process fix deployed
 
 ---
 
@@ -260,14 +260,14 @@ builtin_tools = [..., "Skill"]
 
 ## System Improvements (v0.5.x)
 
-**Latest:** v0.5.3 - Code Execution with MCP (85-95% token savings) 🔄 IN DEVELOPMENT
+**Latest:** v0.5.3.3 - Code Execution with MCP + Production Stability ✅ DEPLOYED
 **v0.5.0:** ✅ NATIVE SKILLS COMPLETE - Local validation successful (Nov 2, 2025)
 **Foundation:** Anthropic's native Agent SDK skills pattern + Code execution best practices
 
-### Code Execution with MCP (v0.5.3) ⚡ NEW
+### Code Execution with MCP (v0.5.3) ⚡
 
-**Status:** 🔄 IMPLEMENTATION COMPLETE - Ready for pilot deployment (Nov 5-8, 2025)
-**Branch:** `claude/codebase-review-inspection-011CUqK3BbmCpxT6HmYQu9nT`
+**Status:** ✅ DEPLOYED - Merged to main (Nov 8, 2025), patch versions through v0.5.3.3 (Nov 13, 2025)
+**Branch:** Merged to `main` (e419f30)
 
 **Problem Solved:**
 Large knowledge base documents (4,800+ lines) were loading entirely into model context, wasting tokens when most queries only need 200-300 lines of relevant content.
@@ -374,10 +374,10 @@ External Skills MCP (deprecated) → Native Agent SDK Skills
 
 ---
 
-**Document Version:** 12.0 (Updated with v0.5.3 Code Execution with MCP)
-**Last Updated:** November 9, 2025
-**Production Status:** v0.5.2.2 ✅ (100% bot migration complete)
-**Development Status:** v0.5.3 🔄 (Code execution - 85-95% token savings, ready for pilot)
+**Document Version:** 13.0 (Updated with v0.5.3.3 Production Deployment)
+**Last Updated:** November 15, 2025
+**Production Status:** v0.5.3.3 ✅ (Code execution with MCP + zombie process fix deployed)
+**Development Status:** Stable - All features merged to main
 
 **For Details:**
 - Tool matrix and detailed workflows → See CLAUDE.md

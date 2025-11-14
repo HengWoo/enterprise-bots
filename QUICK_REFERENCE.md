@@ -1,7 +1,7 @@
 # Campfire AI Bot - Quick Reference
 
-**Current Production:** v0.4.0.2 ✅
-**Last Updated:** October 30, 2025
+**Current Production:** v0.5.3.3 ✅
+**Last Updated:** November 15, 2025
 
 ---
 

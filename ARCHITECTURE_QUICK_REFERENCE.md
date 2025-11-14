@@ -1,8 +1,8 @@
 # Campfire AI Bot - Architecture Quick Reference
 
-**Production Version:** v0.5.2.2 ✅
-**Development Version:** v0.5.3 🔄 (Code Execution with MCP - 85-95% token savings)
-**Last Updated:** 2025-11-09
+**Production Version:** v0.5.3.3 ✅ (Code Execution with MCP + Production Stability)
+**Development Version:** (none - stable)
+**Last Updated:** 2025-11-15
 
 ---
 
@@ -193,10 +193,13 @@ User @mention → Campfire webhook → FastAPI background task →
 | **v0.5.0** | ✅ COMPLETE | Native Agent SDK skills (filesystem-based) |
 | **v0.5.1** | ✅ COMPLETE | Automated reminders, cc_tutor migration |
 | **v0.5.2** | ✅ COMPLETE | **Bot migration sprint - 100% completion** (5 bots migrated) |
-| **v0.5.2.2** | ✅ **IN PRODUCTION** | Memory leak fix, file download URL fix, CI/CD pipeline |
-| **v0.5.3** | 🔄 **IN DEVELOPMENT** | **Code execution with MCP - 85-95% token savings, 4 helper functions** |
+| **v0.5.2.2** | ✅ COMPLETE | Memory leak fix, file download URL fix, CI/CD pipeline |
+| **v0.5.3** | ✅ COMPLETE | **Code execution with MCP - 85-95% token savings, 4 helper functions** |
+| **v0.5.3.1** | ✅ COMPLETE | File download URL fixes (CAMPFIRE_URL + KB path) |
+| **v0.5.3.2** | ✅ COMPLETE | DNS-only mode configuration + nginx routing |
+| **v0.5.3.3** | ✅ **PRODUCTION** | **Zombie process fix - Docker init system** |
 
-### v0.5.3 - Code Execution with MCP ⚡
+### v0.5.3.x - Code Execution with MCP + Production Stability ⚡
 
 **Innovation:** Filter large documents in execution environment BEFORE returning to model
 
@@ -220,7 +223,12 @@ After:  search_and_extract(query="MCP", category="claude-code")
 - Operations docs: 633 lines → ~100 tokens (76-84% savings)
 - Response time: **90% faster** (2.0s → 0.2s)
 
-**Status:** Implementation complete, ready for pilot on personal_assistant bot
+**Status:** ✅ DEPLOYED (Nov 8-13, 2025) - v0.5.3 merged, patched through v0.5.3.3
+
+**Patch Versions:**
+- **v0.5.3.1 (Nov 9):** Fixed CAMPFIRE_URL + KB path for production
+- **v0.5.3.2 (Nov 9):** DNS-only mode + nginx configuration
+- **v0.5.3.3 (Nov 13):** Zombie process fix via Docker init system
 
 ---
 
@@ -303,6 +311,6 @@ User asks about...                    → Load this file
 
 ---
 
-**Quick Reference Version:** 3.0 (Updated with v0.5.3 Code Execution with MCP)
-**Last Updated:** 2025-11-09
+**Quick Reference Version:** 4.0 (Updated with v0.5.3.3 Production Deployment)
+**Last Updated:** 2025-11-15
 **Maintained By:** Development team

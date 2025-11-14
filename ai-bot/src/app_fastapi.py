@@ -230,7 +230,7 @@ async def lifespan(app: FastAPI):
     config = get_config()
 
     print("=" * 60)
-    print("🚀 Campfire AI Bot v0.5.3 - Code Execution with MCP (85-95% Token Savings)")
+    print("🚀 Campfire AI Bot v0.5.3.3 - Code Execution with MCP + Production Stability")
     print("=" * 60)
 
     # Startup: Initialize application state
@@ -381,7 +381,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Campfire AI Bot",
     description="AI-powered bot for Campfire chat using Claude Agent SDK with automated reminder delivery",
-    version="0.5.1",
+    version="0.5.3.3",
     lifespan=lifespan
 )
 
@@ -391,7 +391,7 @@ async def health():
     """Health check endpoint"""
     return {
         'status': 'healthy',
-        'version': '0.5.0',
+        'version': '0.5.3.3',
         'timestamp': datetime.now().isoformat()
     }
 

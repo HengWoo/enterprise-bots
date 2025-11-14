@@ -26,8 +26,8 @@ RUN uv sync --frozen
 FROM python:3.11-slim
 
 LABEL maintainer="heng.woo@gmail.com"
-LABEL description="Campfire AI Bot v0.5.0 - Verification + Code Generation + Smart HTML Detection (FastAPI)"
-LABEL version="0.5.0"
+LABEL description="Campfire AI Bot v0.5.3.3 - Code Execution with MCP + Production Stability (FastAPI)"
+LABEL version="0.5.3.3"
 
 # Install uv in runtime (CRITICAL: needed for Financial MCP subprocess)
 RUN pip install --no-cache-dir uv

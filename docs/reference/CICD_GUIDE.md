@@ -32,7 +32,7 @@ Fully automated CI/CD pipeline using GitHub Actions with manual approval gates f
 7. Wait ~2-3 minutes (includes health checks)
 
 ### Rollback
-**Automatic:** Deployment failures trigger automatic rollback to v0.5.2.2
+**Automatic:** Deployment failures trigger automatic rollback to v0.5.3.3
 
 **Manual:** Run "Deploy to Production" workflow with previous stable version
 
@@ -69,7 +69,7 @@ permissions:
 - Update docker-compose.yml with version tag
 - Execute `docker-compose down && docker-compose up -d`
 - 10 health check retries (30s intervals)
-- **Automatic rollback to v0.5.2.2 on failure**
+- **Automatic rollback to v0.5.3.3 on failure**
 - Estimated time: 2-3 minutes after approval
 
 ---
@@ -252,7 +252,7 @@ git submodule add https://github.com/HengWoo/fin_report_agent.git ai-bot/financi
 **Solution:** Check workflow has `permissions: contents:write, packages:write`
 
 ### Deployment fails health checks
-**Result:** Automatic rollback to v0.5.2.2 will be triggered
+**Result:** Automatic rollback to v0.5.3.3 will be triggered
 
 ### SSH connection fails
 **Check:** Verify DO_SSH_KEY, DO_HOST, DO_USER secrets are correctly configured

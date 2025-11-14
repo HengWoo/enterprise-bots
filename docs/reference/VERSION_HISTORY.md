@@ -1,18 +1,18 @@
 # Campfire AI Bot - Complete Version History
 
 **Project Start:** October 2025
-**Current Production:** v0.5.2.2
-**Latest Development:** v0.5.3 - Code Execution with MCP (85-95% token savings)
+**Current Production:** v0.5.3.3
+**Latest Stable:** v0.5.3.3 - Code Execution with MCP + Production Stability
 
 ---
 
 ## Version Timeline
 
 ```
-v1.0.x (Oct 7) → v0.2.0 (Oct 14) → v0.3.0 (Oct 20) → v0.4.0 (Oct 25) → v0.4.1 (Oct 29) → v0.5.0 (Nov 2) → v0.5.2 (Nov 3-4) → v0.5.2.2 (Nov 5-6) → v0.5.3 (Nov 5-8)
-   ↓                 ↓                  ↓                  ↓                  ↓                  ↓                   ↓                      ↓                   ↓
- Flask            FastAPI          Haiku 4.5         Multi-bot        File-based       Native Skills       100% Migration      Production        Code Execution
- MVP              Sessions         Enhanced          Collaboration    Prompts          (Filesystem)        Complete (7/7)      Fixes + CI/CD     with MCP (86% ↓)
+v1.0.x (Oct 7) → v0.2.0 (Oct 14) → v0.3.0 (Oct 20) → v0.4.0 (Oct 25) → v0.4.1 (Oct 29) → v0.5.0 (Nov 2) → v0.5.2 (Nov 3-4) → v0.5.2.2 (Nov 5-6) → v0.5.3.3 (Nov 5-13)
+   ↓                 ↓                  ↓                  ↓                  ↓                  ↓                   ↓                      ↓                        ↓
+ Flask            FastAPI          Haiku 4.5         Multi-bot        File-based       Native Skills       100% Migration      Production        Code Execution + Stability
+ MVP              Sessions         Enhanced          Collaboration    Prompts          (Filesystem)        Complete (7/7)      Fixes + CI/CD     (86% ↓ + Zombie Fix)
 ```
 
 ---
@@ -524,8 +524,8 @@ Reminder status: "triggered", triggered_at recorded
 ---
 
 ### v0.5.3 (November 5-8, 2025) - Code Execution with MCP ⚡
-**Status:** 🔄 IN DEVELOPMENT - Implementation complete, ready for pilot testing
-**Branch:** `claude/codebase-review-inspection-011CUqK3BbmCpxT6HmYQu9nT`
+**Status:** ✅ DEPLOYED - Merged to main (Nov 8, 2025), patched through v0.5.3.3 (Nov 13, 2025)
+**Branch:** Merged to `main` (e419f30)
 
 **What Changed:** Implemented Anthropic's latest best practice (Nov 2025 article: "Code Execution with MCP") to filter large knowledge base documents in the execution environment before returning results to the model, achieving 85-95% token savings.
 
@@ -661,6 +661,147 @@ Only filtered content enters model context →
 4. Expand to other bots if metrics validate targets
 
 **Date:** 2025-11-05 to 2025-11-08
+
+---
+
+### v0.5.3.1 (November 9, 2025) - File Download URL Fixes
+**Status:** ✅ COMPLETE - Deployed to production
+
+**What Changed:** Fixed file download URL generation and knowledge base path resolution for production environment.
+
+**Problems Solved:**
+
+**1. CAMPFIRE_URL Fix**
+```python
+# Problem: Hardcoded localhost in file_saving_tools.py
+download_url = f"http://localhost:8000/files/download/{token}"
+
+# Fix: Use environment variable
+download_url = f"{os.getenv('CAMPFIRE_URL', 'http://localhost:8000')}/files/download/{token}"
+```
+
+**2. Knowledge Base Path Fix**
+```python
+# Problem: filter_document.py used development path
+KB_BASE_PATH = "/Users/heng/Development/campfire/ai-bot/knowledge-base"
+
+# Fix: Use production path
+KB_BASE_PATH = "/app/ai-knowledge/company_kb"
+```
+
+**Impact:**
+- ✅ File downloads now work correctly in production (proper HTTPS URLs)
+- ✅ Knowledge base code execution helpers now find documents in production
+- ✅ No code logic changes, only configuration corrections
+
+**Files Modified:**
+- `src/tools/file_saving_tools.py` - CAMPFIRE_URL environment variable usage
+- `.claude/skills/knowledge-base/helpers/filter_document.py` - KB path correction
+
+**Commits:** 5e05c26, 30010cf
+
+**Date:** 2025-11-09
+
+---
+
+### v0.5.3.2 (November 9, 2025) - DNS-Only Mode Configuration
+**Status:** ✅ COMPLETE - Deployed to production
+
+**What Changed:** Configured file download system for Cloudflare DNS-only mode (grey cloud) with nginx reverse proxy routing.
+
+**Problem:**
+- File downloads use domain `https://chat.smartice.ai` (better UX)
+- FastAPI runs on port 5000 internally
+- Cloudflare DNS-only mode (grey cloud) doesn't proxy - direct server access
+- Nginx needed to route `/files/download/*` requests to FastAPI
+
+**Solution:**
+
+**1. Updated Docker Compose**
+```yaml
+ports:
+  - "5000:8000"  # Webhooks (internal)
+  - "8080:8000"  # File downloads (backup)
+# DNS-only mode uses port 5000 in URLs
+```
+
+**2. Nginx Configuration** (documented)
+```nginx
+location /files/download/ {
+    proxy_pass http://localhost:5000/files/download/;
+    proxy_set_header Host $host;
+    # ... additional headers
+}
+```
+
+**3. Environment Variable**
+```bash
+CAMPFIRE_URL=https://chat.smartice.ai  # Now uses port-free URLs
+```
+
+**Impact:**
+- ✅ File downloads work with clean URLs (no :5000 port in URL)
+- ✅ Nginx routes requests from Campfire domain to FastAPI service
+- ✅ DNS-only mode (grey cloud) working correctly
+- ✅ Complete documentation added for nginx setup
+
+**Files Modified:**
+- `ai-bot/docker-compose.yml` - Port configuration and comments
+- `ai-bot/deployment/nginx-file-downloads.conf` - NEW (nginx config template)
+
+**Commits:** c0b1e9c, f5b9526
+
+**Date:** 2025-11-09
+
+---
+
+### v0.5.3.3 (November 13, 2025) - Zombie Process Fix
+**Status:** ✅ **PRODUCTION** - Critical stability improvement
+
+**What Changed:** Added Docker init system to prevent zombie process accumulation from Agent SDK subprocesses.
+
+**Problem:**
+- Zombie processes escalated from 1 to 7 over 24 hours
+- 2 bash zombies (23h, 20h old) from document processing (pandoc, markitdown)
+- 5 GPG zombies (gpgconf, gpg, gpgsm - 55min old) from git/crypto operations
+- All parent: uvicorn PID 2231827 (running as PID 1 without init system)
+- Agent SDK Bash tool spawns subprocesses that become zombies when orphaned
+
+**Root Cause:**
+- Uvicorn runs as PID 1 in Docker container
+- PID 1 has special responsibilities: must reap orphaned child processes
+- Uvicorn not designed to be PID 1 - doesn't handle zombie reaping
+- Agent SDK Bash tool creates short-lived subprocesses (legitimate)
+- Without proper reaping, zombies accumulate indefinitely
+
+**Solution:**
+```yaml
+# docker-compose.yml
+services:
+  ai-bot:
+    init: true  # Enable Docker's built-in tini process reaper
+```
+
+**How It Works:**
+- Docker's `init: true` runs tini as PID 1 (industry-standard init system)
+- Tini runs uvicorn as child process
+- Tini automatically reaps all zombie processes
+- Zero code changes, zero risk to Agent SDK
+- Standard solution used by Kubernetes, production systems
+
+**Impact:**
+- ✅ Zombie processes automatically cleaned up
+- ✅ No memory/process table leaks
+- ✅ Long-term production stability improved
+- ✅ Agent SDK can spawn subprocesses safely
+- ✅ Zero code changes - pure infrastructure fix
+
+**Files Modified:**
+- `ai-bot/docker-compose.yml` - Added `init: true` flag
+
+**Commit:** d210f0d
+
+**Date:** 2025-11-13
 
 ---
 
